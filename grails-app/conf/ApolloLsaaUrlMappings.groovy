@@ -7,6 +7,7 @@ class UrlMappings {
             }
         }
         "/altLociTrack/stats/global"(action: "globalStats", controller: "altLociTrack")
+        "/altLociTrack/features"(action: "features", controller: "altLociTrack")
 
         "/"(controller: 'home', action: 'index')
         "500"(view:'/error')
