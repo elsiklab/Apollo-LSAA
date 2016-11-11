@@ -74,7 +74,7 @@ function(
                     label: 'View report',
                     iconClass: 'dijitIconTable',
                     onClick: function() {
-                        window.open(thisB.contextPath + '/alternativeLoci');
+                        window.open(thisB.contextPath + '/../alternativeLoci');
                     }
                 }));
             });

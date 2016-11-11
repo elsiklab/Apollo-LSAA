@@ -15,7 +15,7 @@ class AltLociTrackController {
         if (params.format && params.format != "" && params.format != " ") {
             sequenceName = sequenceName + "." + params.format
         }
-        Sequence sequence = Sequence.findByName(params.id)
+        Sequence sequence = Sequence.findByName(sequenceName)
         def features = AlternativeLoci.createCriteria().list {
             featureLocations {
                 eq('sequence', sequence)
