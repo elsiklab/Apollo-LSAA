@@ -456,7 +456,7 @@ class AlternativeLociController {
                             username: 'admin',
                             dateCreated: new Date(),
                             lastUpdated: new Date(),
-                            originalname: 'admin-' + sequenceName + '-' + new Date(),
+                            originalname: sequenceName,
                             organism: organism
                     ).save(flush: true)
 
