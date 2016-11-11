@@ -3,6 +3,7 @@ package org.elsiklab
 import static org.springframework.http.HttpStatus.*
 
 import grails.converters.JSON
+import org.codehaus.groovy.grails.web.json.JSONObject
 import grails.util.Environment
 import grails.transaction.Transactional
 import org.bbop.apollo.FeatureLocation
@@ -261,87 +262,223 @@ class AlternativeLociController {
 
         render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
     }
-    def createReversal() {
+
+    def createCorrection() {
+        log.info "@createCorrection: ${params.toString()}"
         String name = UUID.randomUUID()
-        Organism organism = Organism.findByCommonName(params.organism)
+        String type = "CORRECTION"
+        String description = params.description
+        String sequenceName = params.sequence
+
+        // TODO: this is a crude way of dealing with username
+        String username = params.username
+        User user = User.findByUsername(username)
+
+        Organism organism = Organism.findById(params.organism)
+        int start = Integer.parseInt(params.start)
+        int end = Integer.parseInt(params.end)
+        String coordinateFormat = params.coordinateFormat
+
+        if (coordinateFormat == "one_based") {
+            // bringing the positions to internal zero-based
+            start -= 1
+        }
+
         if (organism) {
-            Sequence seq = Sequence.findByNameAndOrganism(params.sequence, organism)
-            if(seq) {
-                FastaFile fastaFile = FastaFile.findByOrganism(organism)
-                if (fastaFile) {
-                    AlternativeLoci altloci = new AlternativeLoci(
-                        name: params.sequence,
-                        uniqueName: name,
-                        description: params.description,
-                        reversed: true,
-                        start_file: params.start,
-                        end_file: params.end,
-                        fasta_file: fastaFile,
-                        name_file: seq.name
-                    ).save(flush: true, failOnError: true)
+            Sequence seq = null
+            def results = Sequence.executeQuery(
+                    "SELECT DISTINCT s FROM Sequence s WHERE s.name =:querySequenceName AND s.organism =:queryOrganism",
+                    [querySequenceName: sequenceName, queryOrganism: organism])
 
-                    FeatureLocation featureLoc = new FeatureLocation(
-                        fmin: params.start,
-                        fmax: params.end,
-                        feature: altloci,
-                        sequence: seq
-                    ).save(flush: true, failOnError: true)
-
-                    altloci.addToFeatureLocations(featureLoc)
-
-                    render ([success: true] as JSON)
-                }
-                else {
-                    render text: ([error: 'No sequence found'] as JSON), status: 500
-                }
+            if (results.size() == 0) {
+                render text: ([error: 'sequence ' + sequenceName + ' not found for organism ' + organism.commonName] as JSON)
+            }
+            else if (results.size() == 1) {
+                seq = results.iterator().next()
             }
             else {
-                render text: ([error: 'No representative FASTA found for organism'] as JSON), status: 500
+                log.warn "HQL for fetching sequence returned more than one result; using the first most"
+                seq = results.iterator().next()
+            }
+
+            if (seq) {
+                log.info "Creating FASTA file to /Users/deepak.unni3/GIT/apollo-lsaa-directory"
+                String filePrefix = organism.commonName + '-' + sequenceName + '-' + name
+                def file = new File("/Users/deepak.unni3/GIT/apollo-lsaa-directory/" + filePrefix + ".fa")
+                file << ">${name} ${type} ${sequenceName} ${organism.commonName}\n"
+                file << params.sequencedata
+
+                FastaFile fastaFile = new FastaFile(
+                        filename: file.getAbsolutePath(),
+                        originalname: filePrefix,
+                        username: 'admin',
+                        dateCreated: new Date(),
+                        lastModified: new Date(),
+
+                ).save(flush: true)
+
+                // Corrections will always default their start_file and end_file to 0 and len(sequence) - 1, respectively
+                AlternativeLoci altLoci = new AlternativeLoci(
+                        name: filePrefix + '-alt',
+                        uniqueName: name,
+                        description: description,
+                        start_file: 0,
+                        end_file: params.sequencedata.length() - 1,
+                        name_file: fastaFile.filename,
+                        fasta_file: fastaFile,
+                ).save(flush: true)
+
+                featureService.setOwner(altLoci, user)
+
+                FeatureLocation featureLoc = new FeatureLocation(
+                        fmin: start,
+                        fmax: end,
+                        feature: altLoci,
+                        sequence: seq
+                ).save(flush: true)
+
+                altLoci.addToFeatureLocations(featureLoc)
+
+                render ([success: true] as JSON)
+            }
+            else {
+                render text: ([error: 'No sequence found'] as JSON), status: 500
             }
         }
         else {
             render text: ([error: 'No organism found'] as JSON), status: 500
         }
     }
-    def createCorrection() {
+
+    def createReversal() {
+        log.info "@createReversal: ${params.toString()}"
         String name = UUID.randomUUID()
-        Organism organism = Sequence.findByNameAndOrganism(params.organism)
-        if(organism) {
-            Sequence seq = Sequence.findByNameAndOrganism(params.sequence, organism)
-            if(seq) {
-                def file = File.createTempFile('fasta', null, new File(grailsApplication.config.lsaa.appStoreDirectory))
-                file.withWriter { temp ->
-                    filename = temp.absolutePath
-                    temp << ">${name}"
-                    temp << params.sequencedata
-                    fastaFile = new FastaFile(
-                        filename: file.absolutePath,
-                        username: 'admin',
-                        dateCreated: new Date(),
-                        lastModified: new Date(),
-                        originalname: 'admin-' + new Date()
-                    ).save(flush: true)
+        String type = "REVERSAL"
+        String description = params.description
+        String sequenceName = params.sequence
+
+        // TODO: this is a crude way of dealing with username
+        String username = params.username
+        User user = User.findByUsername(username)
+
+        Organism organism = Organism.findById(params.organism)
+        int start = Integer.parseInt(params.start)
+        int end = Integer.parseInt(params.end)
+        String coordinateFormat = params.coordinateFormat
+
+        if (organism) {
+            Sequence seq = null
+            def results = Sequence.executeQuery(
+                    "SELECT DISTINCT s FROM Sequence s WHERE s.name =:querySequenceName AND s.organism =:queryOrganism",
+                    [querySequenceName: sequenceName, queryOrganism: organism])
+
+            if (results.size() == 0) {
+                render text: ([error: 'sequence ' + sequenceName + ' not found for organism ' + organism.commonName] as JSON)
+            }
+            else if (results.size() == 1) {
+                seq = results.iterator().next()
+            }
+            else {
+                log.warn "HQL for fetching sequence returned more than one result; using the first most"
+                seq = results.iterator().next()
+            }
+
+            if (seq) {
+                // TODO: HQL - check for more than one
+                def fastaFileQueryResults = FastaFile.executeQuery(
+                        "SELECT DISTINCT f FROM FastaFile f WHERE f.originalname =:querySequenceName AND f.organism =:queryOrganism",
+                        [querySequenceName: sequenceName, queryOrganism: organism])
+
+                FastaFile fastaFile
+                if (fastaFileQueryResults.size() > 0) {
+                    fastaFile = fastaFileQueryResults.iterator().next()
                 }
 
-                AlternativeLoci altloci = new AlternativeLoci(
-                    name: name,
-                    uniqueName: name,
-                    description: params.description,
-                    start_file: 0,
-                    end_file: new File(fastaFile).length(),
-                    fasta_file: fastaFile
-                ).save(flush: true)
+                if (fastaFile) {
+                    // FastaFile object already exists in the database
+                    log.info "[ A ] FastaFile already exists with ${sequenceName} for organism ${organism.commonName}"
+                    log.info "[ A ] creating altLoci and its featureLocation"
+                    AlternativeLoci altLoci = new AlternativeLoci(
+                            name: params.sequence,
+                            uniqueName: name,
+                            description: params.description,
+                            reversed: true,
+                            start_file: params.start,
+                            end_file: params.end,
+                            fasta_file: fastaFile,
+                            name_file: seq.name
+                    ).save(flush: true, failOnError: true)
 
-                FeatureLocation featureLoc = new FeatureLocation(
-                    fmin: params.start,
-                    fmax: start.end,
-                    feature: altloci,
-                    sequence: seq
-                ).save(flush: true)
+                    featureService.setOwner(altLoci, user)
 
-                altloci.addToFeatureLocations(featureLoc)
+                    FeatureLocation featureLoc = new FeatureLocation(
+                            fmin: params.start,
+                            fmax: params.end,
+                            feature: altLoci,
+                            sequence: seq
+                    ).save(flush: true, failOnError: true)
 
-                render ([success: true] as JSON)
+                    altLoci.addToFeatureLocations(featureLoc)
+
+                    render ([success: true] as JSON)
+                }
+                else {
+                    // read existing split genome fasta
+                    log.info organism.directory
+                    log.info "[ B ] expecting split FASTA to be in ${organism.directory}/fasta/"
+                    String path = organism.directory + "/fasta/" + organism.commonName + '-' + sequenceName + ".fa"
+
+                    FastaFile newFastaFile
+                    File file = new File(path)
+
+                    if (file.exists() && !file.isDirectory()) {
+                        log.info "[ B1 ] FASTA representation of ${sequenceName} already exists"
+                    }
+                    else {
+                        log.info "[ B2 ] FASTA representation of ${sequenceName} does not exist in directory"
+                        String fileName = organism.commonName + '-' + sequenceName + ".fa"
+                        file = new File("/Users/deepak.unni3/GIT/apollo-lsaa-directory/" + sequenceName)
+                        String genomeFile = organism.directory + "/Amel_4.5_scaffolds.fa"
+                        file.withWriter { temp ->
+                            temp << ">${sequenceName}\n"
+                            temp << fastaFileService.readIndexedFasta(genomeFile, sequenceName)
+                        }
+                    }
+
+                    log.info "[ B ] creating FastaFile for ${file.getAbsolutePath()}"
+                    newFastaFile = new FastaFile(
+                            filename: file.getAbsolutePath(),
+                            username: 'admin',
+                            dateCreated: new Date(),
+                            lastUpdated: new Date(),
+                            originalname: 'admin-' + sequenceName + '-' + new Date(),
+                            organism: organism
+                    ).save(flush: true)
+
+                    // Now create the AltLoci for reversal
+                    log.info "[ B ] creating altLoci and its featureLocation"
+                    AlternativeLoci altLoci = new AlternativeLoci(
+                            name: sequenceName,
+                            uniqueName: name,
+                            description: description,
+                            reversed: true,
+                            start_file: start,
+                            end_file: end,
+                            fasta_file: newFastaFile,
+                            name_file: newFastaFile.filename
+                    ).save(flush: true, failOnError: true)
+
+                    FeatureLocation featureLoc = new FeatureLocation(
+                            fmin: start,
+                            fmax: end,
+                            feature: altLoci,
+                            sequence: seq
+                    ).save(flush: true, failOnError: true)
+
+                    altLoci.addToFeatureLocations(featureLoc)
+
+                    render ([success: true] as JSON)
+                }
             }
             else {
                 render text: ([error: 'No sequence found'] as JSON), status: 500
