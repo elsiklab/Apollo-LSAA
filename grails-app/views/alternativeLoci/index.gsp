@@ -24,7 +24,7 @@
             </g:if>
 
             <g:link action="create">Create</g:link>
-            
+
             <table>
                 <thead>
                     <tr>
@@ -32,13 +32,13 @@
                         <g:sortableColumn property="id" title="Edit"/>
                         <g:sortableColumn property="lastUpdated" title="Last updated" params="${filters}"/>
                         <g:sortableColumn property="organism" title="Organism" params="${filters}"/>
-                        <g:sortableColumn property="sequencename" title="Sequence name" params="${filters}"/>
-                        <g:sortableColumn property="name" title="Name" params="${filters}"/>
-                        <g:sortableColumn property="start_file" title="Alternative coordinates" params="${filters}"/>
+                        <g:sortableColumn property="location" title="Location" params="${filters}"/>
+                        %{--<g:sortableColumn property="start_file" title="Alternative coordinates" params="${filters}"/>--}%
                         <g:sortableColumn property="owners" title="Owner" params="${filters}"/>
                         <g:sortableColumn property="cvterm" title="CV Term" params="${filters}"/>
                         <g:sortableColumn property="description" title="Description" params="${filters}"/>
                         <g:sortableColumn property="reversed" title="Reversed" params="${filters}"/>
+                        <g:sortableColumn property="link" title="Link" params="${filters}"/>
                     </tr>
                 </thead>
                 <tbody>
@@ -49,19 +49,20 @@
                             <td><g:formatDate format="E dd-MMM-yy" date="${feature.lastUpdated}"/></td>
                             <td>${feature.featureLocation?.sequence?.organism?.commonName}</td>
                             <td>${feature.featureLocation?.sequence?.name}:${feature.featureLocation.fmin}..${feature.featureLocation.fmax}</td>
+                            %{--<td>${feature.name_file}:${feature.start_file}..${feature.end_file}</td>--}%
+                            <td>${feature.owner?.username}</td>
+                            <td>${feature.cvTerm}</td>
+                            <td>${feature.description}</td>
+                            <td>${feature.reversed}</td>
                             <td>
                                 <g:if env="development">
-                                    <a href="${g.createLink(relativeUri: '../jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>
+                                    <!--<a href="${g.createLink(relativeUri: '../jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>-->
+                                    <a href="${g.createLink(relativeUri: + feature.featureLocation.sequence.organism.id + '/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax)}">JBrowse Link</a>
                                 </g:if>
                                 <g:if env="production">
                                     <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.commonName+'/jbrowse/?loc=' + feature.name + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>
                                 </g:if>
                             </td>
-                            <td>${feature.name_file}:${feature.start_file}..${feature.end_file}</td>
-                            <td>${feature.owner?.username}</td>
-                            <td>${feature.cvTerm}</td>
-                            <td>${feature.description}</td>
-                            <td>${feature.reversed}</td>
                         </tr>
                     </g:each>
                 </tbody>
