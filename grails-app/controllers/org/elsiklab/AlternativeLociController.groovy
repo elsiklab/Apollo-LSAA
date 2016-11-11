@@ -302,9 +302,9 @@ class AlternativeLociController {
             }
 
             if (seq) {
-                log.info "Creating FASTA file to /Users/deepak.unni3/GIT/apollo-lsaa-directory"
+                log.info "Creating FASTA file to ${grailsApplication.config.lsaa.appStoreDirectory}"
                 String filePrefix = organism.commonName + '-' + sequenceName + '-' + name
-                def file = new File("/Users/deepak.unni3/GIT/apollo-lsaa-directory/" + filePrefix + ".fa")
+                def file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + filePrefix + ".fa")
                 file << ">${name} ${type} ${sequenceName} ${organism.commonName}\n"
                 file << params.sequencedata
 
@@ -442,7 +442,7 @@ class AlternativeLociController {
                     else {
                         log.info "[ B2 ] FASTA representation of ${sequenceName} does not exist in directory"
                         String fileName = organism.commonName + '-' + sequenceName + ".fa"
-                        file = new File("/Users/deepak.unni3/GIT/apollo-lsaa-directory/" + sequenceName)
+                        file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + sequenceName)
                         String genomeFile = organism.directory + "/Amel_4.5_scaffolds.fa"
                         file.withWriter { temp ->
                             temp << ">${sequenceName}\n"
