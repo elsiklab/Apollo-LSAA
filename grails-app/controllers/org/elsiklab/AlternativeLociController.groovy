@@ -366,6 +366,11 @@ class AlternativeLociController {
         int end = Integer.parseInt(params.end)
         String coordinateFormat = params.coordinateFormat
 
+        if (coordinateFormat == "one_based") {
+            // bringing the positions to internal zero-based
+            start -= 1
+        }
+
         if (organism) {
             Sequence seq = null
             def results = Sequence.executeQuery(
