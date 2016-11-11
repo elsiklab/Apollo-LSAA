@@ -43,13 +43,15 @@ function(
             new Button({
                 label: 'OK',
                 onClick: function() {
-                    request(thisB.contextPath + '/alternativeLoci/createReversal', {
+                    request(thisB.contextPath + '/../alternativeLoci/createReversal', {
                         data: {
                             start: thisB.start.get('value'),
                             end: thisB.end.get('value'),
+                            coordinateFormat: thisB.coordinateFormat,
                             sequence: thisB.sequence.get('value'),
                             description: thisB.description.get('value'),
-                            organism: thisB.browser.config.dataset_id
+                            organism: thisB.browser.config.dataset_id,
+                            username: thisB.user.email
                         },
                         handleAs: 'json',
                         method: 'post'
@@ -72,6 +74,7 @@ function(
                     if (highlight) {
                         thisB.start.set('value', highlight.start);
                         thisB.end.set('value', highlight.end);
+                        thisB.coordinateFormat = "zero_based";
                         thisB.sequence.set('value', highlight.ref);
                     } else {
                         console.error('No highlight set');
@@ -86,7 +89,9 @@ function(
             this.sequence = new TextBox({id: 'lsaa_name'});
             this.start = new TextBox({id: 'lsaa_start'});
             this.end = new TextBox({id: 'lsaa_end'});
+            this.coordinateFormat = "one_based";
             this.description = new TextBox({id: 'lsaa_description'});
+            this.user = JSON.parse(window.parent.getCurrentUser());
             this.error = dom.create('div', { 'id': 'error', 'class': 'errormsg' });
             var br = function() { return dom.create('br'); };
 
