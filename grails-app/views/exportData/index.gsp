@@ -4,7 +4,7 @@
 <html>
     <head>
         <meta name="layout" content="main">
-        <title>LSAA - Edit scaffolds</title>
+        <title>LSAA - Export scaffolds</title>
         <style>
         .scaffoldEditor {
             width: 100%;
@@ -26,7 +26,7 @@
     </head>
     <body>
     <g:render template="../layouts/reportHeader"/>
-        <h3 class="header">Scaffold editor</h3>
+        <h3 class="header">Export Scaffolds with LSAA</h3>
         
         <div class="container">
             <g:if test="${error}">
@@ -37,12 +37,11 @@
                     <g:select name="organism" required="" from="${Organism.list()}" optionValue="commonName" optionKey="id" />
                     <select name="type">
                         <option>JSON</option>
-                        <option>YAML</option>
                         <option>FASTA</option>
                     </select>
                     <select name="download">
                         <option value="text">View</option>
-                        <option value"download">Download</option>
+                        <option value="download">Download</option>
                     </select>
                     <g:submitButton name="Submit"></g:submitButton>
                 </g:form>

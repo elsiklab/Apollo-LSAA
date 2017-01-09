@@ -17,9 +17,26 @@ class FastaFileService {
     }
 
     def readIndexedFastaRegion(String file, String contig, Integer start, Integer end) {
-        def indexedFasta = new IndexedFastaSequenceFile(new File(file))
+        def indexedFasta
+        try {
+            indexedFasta = new IndexedFastaSequenceFile(new File(file))
+        }
+        catch(Exception e) {
+            println "Index not found for: ${file}; generating one..."
+            generateFastaIndex(file)
+            indexedFasta = new IndexedFastaSequenceFile(new File(file))
+        }
         def ret = indexedFasta.getSubsequenceAt(contig, start, end)
+        println "return seq size: ${new String(ret.getBases()).trim().length()}"
         return new String(ret.getBases()).trim()
+    }
+
+    def generateFastaIndex(String fileName) {
+        println "@generateFastaIndex"
+        def indexProcess = "samtools faidx ${fileName}".execute()
+        def out = new StringBuilder()
+        indexProcess.waitForProcessOutput(out, new StringBuilder())
+        println "$out"
     }
 
     def readIndexedFastaReverse(String file, String contig) {

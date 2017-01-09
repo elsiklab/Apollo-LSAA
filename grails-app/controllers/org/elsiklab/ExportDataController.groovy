@@ -17,30 +17,37 @@ class ExportDataController {
         render view: 'index'
     }
 
-    def getTransformedYaml() {
-        def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
-        if(organism) {
-            def map = exportDataService.getTransformations(organism)
-            response.contentType = 'text/plain'
-            if(params.download == 'Download') {
-                response.setHeader 'Content-disposition', 'attachment;filename=output.yaml'
-            }
-            render text: Yaml.dump(map)
+    /**
+     *
+     * @return
+     */
+    def export() {
+        if(params.type == 'JSON') {
+            getTransformedJSON()
+        }
+        else if(params.type == 'FASTA') {
+            getTransformedFasta()
         }
         else {
-            render text: Yaml.dump([error: "Organism not found"])
+            render text: 'Unknown download method'
         }
     }
 
+    /**
+     *
+     * @return
+     */
     def getTransformedJSON() {
+        println "@getTransformedJson: ${params.toString()}"
         def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
-        if(organism) {
-            def map = exportDataService.getTransformations(organism)
+        if (organism) {
+            def transformedJsonObject = exportDataService.getTransformationAsJSON(organism)
+
             response.contentType = 'application/json'
             if(params.download == 'Download') {
                 response.setHeader 'Content-disposition', 'attachment;filename=output.json'
             }
-            def json = map as JSON
+            def json = transformedJsonObject as JSON
             json.prettyPrint = true
             render text: json
         }
@@ -49,33 +56,31 @@ class ExportDataController {
         }
     }
 
-    def getTransformedSequence() {
+    /**
+     *
+     * @return
+     */
+    def getTransformedFasta() {
+        println "@getTransformedFasta: ${params.toString()}"
         def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
-        if(organism) {
-            def map = exportDataService.getTransformedSequence(organism)
-            if(params.download == 'Download') {
-                response.setHeader 'Content-disposition', 'attachment;filename=output.fa'
+        if (organism) {
+            def transformedFastaMap = exportDataService.getTransformationAsFASTA(organism)
+
+            response.contentType = 'application/json'
+            if (params.download == 'Download') {
+                response.setHeader 'Content-disposition', 'attachment;filename=output.fasta'
             }
-            response.contentType = 'text/plain'
-            render text: map
+
+            String responseData = ""
+            for (String key : transformedFastaMap.keySet()) {
+                responseData += '>' + key + '-LSAA' + ' ' + transformedFastaMap[key]["comment"] + '\n' + transformedFastaMap[key]["sequence"] + '\n'
+            }
+
+            render text: responseData
         }
         else {
             render ([error: "Organism not found"] as JSON)
         }
-    }
 
-    def export() {
-        if(params.type == 'YAML') {
-            getTransformedYaml()
-        }
-        else if(params.type == 'JSON') {
-            getTransformedJSON()
-        }
-        else if(params.type == 'FASTA') {
-            getTransformedSequence()
-        }
-        else {
-            render text: 'Unknown download method'
-        }
     }
 }

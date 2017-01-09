@@ -22,6 +22,7 @@ class AlternativeLoci extends BiologicalRegion {
     Integer start_file
     Integer end_file
     String name_file
+    String orientation
     FastaFile fasta_file
 
 

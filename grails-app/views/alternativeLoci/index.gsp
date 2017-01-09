@@ -23,8 +23,8 @@
                 <div class="message" role="status">${flash.message}</div>
             </g:if>
 
-            <g:link action="create">Create</g:link>
-
+            %{--Disabling create option--}%
+            %{--<g:link action="create">Create</g:link>--}%
             <table>
                 <thead>
                     <tr>
@@ -33,9 +33,12 @@
                         <g:sortableColumn property="lastUpdated" title="Last updated" params="${filters}"/>
                         <g:sortableColumn property="organism" title="Organism" params="${filters}"/>
                         <g:sortableColumn property="location" title="Location" params="${filters}"/>
-                        %{--<g:sortableColumn property="start_file" title="Alternative coordinates" params="${filters}"/>--}%
                         <g:sortableColumn property="owners" title="Owner" params="${filters}"/>
                         <g:sortableColumn property="cvterm" title="CV Term" params="${filters}"/>
+                        %{--<g:sortableColumn property="sizeof_ref" title="sizeof REF" params="${filters}"/>--}%
+                        %{--<g:sortableColumn property="orientation_ref" title="orient. REF" params="${filters}"/>--}%
+                        %{--<g:sortableColumn property="sizeof_lsaa" title="sizeof LSAA" params="${filters}"/>--}%
+                        %{--<g:sortableColumn property="orientation_lsaa" title="orient. LSAA" params="${filters}"/>--}%
                         <g:sortableColumn property="description" title="Description" params="${filters}"/>
                         <g:sortableColumn property="reversed" title="Reversed" params="${filters}"/>
                         <g:sortableColumn property="link" title="Link" params="${filters}"/>
@@ -52,15 +55,22 @@
                             %{--<td>${feature.name_file}:${feature.start_file}..${feature.end_file}</td>--}%
                             <td>${feature.owner?.username}</td>
                             <td>${feature.cvTerm}</td>
+                            %{--<td>${feature.featureLocation.fmax - feature.featureLocation.fmin}</td>--}%
+                            %{--<td>${feature.featureLocation.strand}</td>--}%
+                            %{--<td>${feature.end_file - feature.start_file + 1}</td>--}%
+                            %{--<td>+</td>--}%
                             <td>${feature.description}</td>
                             <td>${feature.reversed}</td>
                             <td>
                                 <g:if env="development">
                                     <!--<a href="${g.createLink(relativeUri: '../jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>-->
                                     <a href="${g.createLink(relativeUri: + feature.featureLocation.sequence.organism.id + '/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax)}">JBrowse Link</a>
+                                %{-- URL format: http://localhost:8090/apollo/19/jbrowse/index.html?loc=Group1.1%3A599858..600273--}%
                                 </g:if>
                                 <g:if env="production">
                                     <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.commonName+'/jbrowse/?loc=' + feature.name + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>
+
+
                                 </g:if>
                             </td>
                         </tr>

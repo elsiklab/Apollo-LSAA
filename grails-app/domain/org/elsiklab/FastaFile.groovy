@@ -6,10 +6,11 @@ class FastaFile {
 
     static constraints = {
         organism nullable: true
+        sequenceName nullable: true
     }
 
 
-
+    String sequenceName
     String filename
     String originalname
     String username
