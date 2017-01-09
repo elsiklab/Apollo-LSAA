@@ -7,14 +7,12 @@ import org.bbop.apollo.Sequence
 class AltLociTrackController {
 
     def features() {
-        log.info "@altLociTrack::features() with params: ${params}"
+        // Have to do this since a sequence name with a period in it, ex: Group1.10, is interpreted as id: Group1 format: 10
         String sequenceName = params.id
-        // Somehow the a sequence name with a '.', ex: Group1.10, is split into
-        // id and format with values Group1 and 10, respectively
-        // This is a quick solution to this issue
         if (params.format && params.format != "" && params.format != " ") {
             sequenceName = sequenceName + "." + params.format
         }
+
         Sequence sequence = Sequence.findByName(sequenceName)
         def features = AlternativeLoci.createCriteria().list {
             featureLocations {
@@ -22,14 +20,13 @@ class AltLociTrackController {
             }
         }
 
-        // TODO: Return more information about the AlternateLoci
-        // TODO: Are the start and the end properly sent to the client?
         JsonBuilder json = new JsonBuilder ()
         json.features features, { it ->
             uniqueID it.uniqueName
-            start it.featureLocation.fmin - 1
-            end it.featureLocation.fmax - 1
-            ref it.featureLocation.sequence.name
+            name it.name
+            start it.featureLocation.fmin
+            end it.featureLocation.fmax
+            type it.reversed ? "Inversion" : "Correction"
             description it.description
         }
 
