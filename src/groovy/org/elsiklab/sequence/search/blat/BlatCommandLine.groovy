@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.codehaus.groovy.grails.web.json.JSONObject
 
-class BlatCommandLine extends SequenceSearchTool {
+class BlatCommandLine {
 
     private String blatBin
     private String database
@@ -20,7 +20,6 @@ class BlatCommandLine extends SequenceSearchTool {
     private boolean removeTmpDir
     protected String [] blatOptions
 
-    @Override
     void parseConfiguration(JSONObject config) throws SequenceSearchToolException {
         blatBin = config.search_exe
         database = config.database
@@ -31,7 +30,6 @@ class BlatCommandLine extends SequenceSearchTool {
         gffFormatter = config.gff_exe
     }
 
-    @Override
     Collection<BlastAlignment> search(String uniqueToken, String query, String databaseId, StringBuilder t) throws SequenceSearchToolException {
         Path p = tmpDir ?
             Files.createTempDirectory(new File(tmpDir).toPath(),'blat_tmp') :
