@@ -15,7 +15,7 @@ class SequenceSearchController {
 
     def searchSequence() {
         log.debug request.JSON.organism
-        Organism organism = Organism.findByCommonName(request.JSON.organism)
+        Organism organism = Organism.findById(request.JSON.organism)
         if(organism) {
             def search = request.JSON.search
             StringBuilder map = new StringBuilder()
