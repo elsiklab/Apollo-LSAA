@@ -65,7 +65,7 @@ function(
                 'track': refSeqName,
                 'operation': 'get_sequence_search_tools'
             };
-            return request(this.seqContext + '/sequenceSearch/getSequenceSearchTools', {
+            return request(this.seqContext + '/../sequenceSearch/getSequenceSearchTools', {
                 data: JSON.stringify(postobj),
                 method: 'post',
                 headers: { 'Content-Type': 'application/json' },
@@ -104,7 +104,7 @@ function(
             }
 
             console.log(this.browser.config);
-            console.log(this.browser.config.organism_id);
+            console.log(this.browser.config.dataset_id);
             var sequenceToolsSelect = dojo.byId('sequence_tools_select');
             var postobj = {
                 track: refSeqName,
@@ -114,11 +114,11 @@ function(
                     database_id: dojo.byId('search_all_refseqs').checked ? null : refSeqName
                 },
                 operation: 'search_sequence',
-                organism: this.browser.config.organism_id
+                organism: this.browser.config.dataset_id
             };
 
             query('#sequence_search_waiting').style('display', '');
-            request(this.seqContext + '/sequenceSearch/searchSequence', {
+            request(this.seqContext + '/../sequenceSearch/searchSequence', {
                 data: JSON.stringify(postobj),
                 handleAs: 'json',
                 method: 'post',
