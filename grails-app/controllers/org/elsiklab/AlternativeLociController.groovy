@@ -370,7 +370,7 @@ class AlternativeLociController {
                     else {
                         println "[ B2 ] FASTA representation of ${sequenceName} does not exist in directory"
                         String fileName = organism.commonName + '-' + sequenceName + ".fa"
-                        file = new File(${grailsApplication.config.lsaa.appStoreDirectory} + "/" + sequenceName)
+                        file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + sequenceName)
                         String genomeFile = organism.blatdb.replace(".2bit", ".fa")
                         file.withWriter { temp ->
                             temp << ">${sequenceName}\n"
@@ -470,7 +470,7 @@ class AlternativeLociController {
             if (seq) {
                 println "Creating FASTA file to ${grailsApplication.config.lsaa.appStoreDirectory}"
                 String filePrefix = organism.commonName + '-' + sequenceName + '-' + name
-                def file = new File(${grailsApplication.config.lsaa.appStoreDirectory} + "/" + filePrefix + ".fa")
+                def file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + filePrefix + ".fa")
                 file << ">${name} ${type} ${sequenceName} ${organism.commonName}\n"
                 file << params.sequencedata
 
