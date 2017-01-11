@@ -77,11 +77,11 @@ function(
                         window.open(thisB.contextPath + '/../alternativeLoci');
                     }
                 }));
-                browser.addGlobalMenuItem('export_lsaa', new MenuItem({
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'Export LSAA',
                     iconClass: 'dijitIconSave',
-                    onCLick: function() {
-                        window.open(thisB.contextPath + '/exportData');
+                    onClick: function() {
+                        window.open(thisB.contextPath + '/../exportData');
                     }
                 }));
             });
