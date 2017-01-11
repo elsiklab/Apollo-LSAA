@@ -44,7 +44,7 @@ class ExportDataController {
             def transformedJsonObject = exportDataService.getTransformationAsJSON(organism)
 
             response.contentType = 'application/json'
-            if(params.download == 'Download') {
+            if(params.download == 'download') {
                 response.setHeader 'Content-disposition', 'attachment;filename=output.json'
             }
             def json = transformedJsonObject as JSON
@@ -67,7 +67,7 @@ class ExportDataController {
             def transformedFastaMap = exportDataService.getTransformationAsFASTA(organism)
 
             response.contentType = 'application/json'
-            if (params.download == 'Download') {
+            if (params.download == 'download') {
                 response.setHeader 'Content-disposition', 'attachment;filename=output.fasta'
             }
 
