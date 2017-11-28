@@ -20,7 +20,7 @@ define([
     ) {
         return declare(ActionBarDialog, {
             autofocus: false,
-            title: 'Create reversal',
+            title: 'Create an alternative loci of type Inversion',
 
             constructor: function(args) {
                 this.browser = args.browser;
@@ -43,11 +43,11 @@ define([
                 new Button({
                     label: 'OK',
                     onClick: function() {
-                        request(thisB.contextPath + '/../alternativeLoci/createReversal', {
+                        request(thisB.contextPath + '/../alternativeLoci/createInversion', {
                             data: {
                                 start: thisB.start.get('value'),
                                 end: thisB.end.get('value'),
-                                coordinateFormat: thisB.coordinateFormat,
+                                coordinateFormat: "one_based",
                                 sequence: thisB.sequence.get('value'),
                                 description: thisB.description.get('value'),
                                 organism: thisB.browser.config.dataset_id,
@@ -72,12 +72,12 @@ define([
                     onClick: function() {
                         var highlight = thisB.browser.getHighlight();
                         if (highlight) {
-                            thisB.start.set('value', highlight.start);
+                            thisB.start.set('value', highlight.start + 1);
                             thisB.end.set('value', highlight.end);
                             thisB.sequence.set('value', highlight.ref);
-                            thisB.coordinateFormat = "zero_based";
+                            thisB.coordinateFormat = "one_based";
                         } else {
-                            console.error('No highlight set');
+                            console.log('No highlight set');
                         }
                     }
                 }).placeAt(actionBar);
@@ -86,7 +86,7 @@ define([
             show: function() {
                 dojo.addClass(this.domNode, 'setLSAA');
 
-                this.sequence = new TextBox({id: 'lsaa_name'});
+                this.sequence = new TextBox({id: 'lsaa_name', value: this.browser.refSeq.name});
                 this.start = new TextBox({id: 'lsaa_start'});
                 this.end = new TextBox({id: 'lsaa_end'});
                 this.coordinateFormat = "one_based";
@@ -96,8 +96,6 @@ define([
                 var br = function() { return dom.create('br'); };
 
                 this.set('content', [
-                    dom.create('p', {
-                        innerHTML: 'Provide coordinate of an inversion or flipped scaffold which will be reverse complemented. See the <a href="../help/">help guide</a> for additional information.' }), br(),
                     dom.create('label', { 'for': 'lsaa_name', innerHTML: 'Reference sequence: ' }), this.sequence.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_start', innerHTML: 'Start: ' }), this.start.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_end', innerHTML: 'End: ' }), this.end.domNode, br(),
