@@ -30,47 +30,59 @@ class BlatCommandLine {
         gffFormatter = config.gff_exe
     }
 
-    Collection<BlastAlignment> search(String uniqueToken, String query, String databaseId, StringBuilder t) throws SequenceSearchToolException {
-        Path p = tmpDir ?
-            Files.createTempDirectory(new File(tmpDir).toPath(),'blat_tmp') :
-            Files.createTempDirectory('blat_tmp')
-        File dir = p.toFile()
-
-        Collection<BlastAlignment> results = runSearch(dir, query, databaseId)
-
-        if (removeTmpDir && dir!=null) {
-            deleteTmpDir(dir)
+    Collection<BlastAlignment> search(String uniqueToken, String query, String databaseId, StringBuilder stringBuilder) throws SequenceSearchToolException {
+        Path tmpDirPath = tmpDir ? Files.createTempDirectory(new File(tmpDir).toPath(),'blat_tmp') : Files.createTempDirectory('blat_tmp')
+        log.debug "blat tmpDir path: ${tmpDirPath}"
+        File tmpDirFile
+        try {
+            tmpDirFile = tmpDirPath.toFile()
+        } catch (IOException e) {
+            println e.message
         }
-        t.append(dir.name)
-        return results
+        log.debug "successfully created file: ${tmpDirFile.canonicalPath}"
+
+        // Perform BLAT search
+        Collection<BlastAlignment> blatResults = runSearch(tmpDirFile, query, databaseId)
+
+        // remove tmpDir created after BLAT run
+        if (removeTmpDir && tmpDirFile != null) {
+            deleteTmpDir(tmpDirFile)
+        }
+        // TODO: perhaps append canonical name instead?
+        stringBuilder.append(tmpDirFile.name)
+
+        return blatResults
     }
 
-    private Collection<BlastAlignment> runSearch(File dir, String query, String databaseId)
-            throws IOException, AlignmentParsingException, InterruptedException {
+    private Collection<BlastAlignment> runSearch(File dir, String query, String databaseId) throws IOException, AlignmentParsingException, InterruptedException {
         String queryArg = createQueryFasta(dir, query)
         String databaseArg = database
-        String outputArg = dir.absolutePath + '/results.tab'
-        String outputPsl = dir.absolutePath + '/results.psl'
-        String outputGff = dir.absolutePath + '/results.gff'
+        String outputArg = dir.absolutePath + File.separator + 'results.tab'
+        String outputPsl = dir.absolutePath + File.separator + 'results.psl'
+        String outputGff = dir.absolutePath + File.separator + 'results.gff'
 
         String command = blatBin + ' '
         for (String option : blatOptions) {
             command += option + ' '
         }
 
-        log.debug "Running: ${command} ${databaseArg} ${queryArg} ${outputArg} -out=blast8"
-        ("${command} ${databaseArg} ${queryArg} ${outputArg} -out=blast8").execute().waitForProcessOutput(System.out, System.err)
-        log.debug "Running: ${command} ${databaseArg} ${queryArg} ${outputPsl}"
-        ("${command} ${databaseArg} ${queryArg} ${outputPsl}").execute().waitForProcessOutput(System.out, System.err)
-        log.debug "Running: ${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}"
+        // Using only .2bit for BLAT
+        log.debug "Running BLAT to create TAB: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputArg} -out=blast8"
+        ("${command} ${databaseArg}:${databaseId} ${queryArg} ${outputArg} -out=blast8").execute().waitForProcessOutput(System.out, System.err)
+        log.debug "Running BLAT to create PSL: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputPsl}"
+        ("${command} ${databaseArg}:${databaseId} ${queryArg} ${outputPsl}").execute().waitForProcessOutput(System.out, System.err)
+        log.debug "Parsing PSL to GFF3: ${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}"
         def gffContent = ("${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}").execute().text
-        log.debug "Result: ${gffContent}"
+        log.debug "Results as GFF3:\n ${gffContent}"
         new File(outputGff).withWriterAppend('UTF-8') { it.write(gffContent) }
         ['flatfile-to-json.pl', '--config', $/{"glyph":"JBrowse/View/FeatureGlyph/Box"}/$,'--clientConfig',$/{"color":"function(feature){return(feature.get('strand')==-1?'blue':'red');}"}/$, '--trackType', 'JBrowse/View/Track/CanvasFeatures', '--trackLabel', "${dir.name}", '--gff', "${outputGff}", '--out', "${outputDir}"].execute().waitForProcessOutput(System.out, System.err)
 
         def timer = new Timer()
-        def outputPath = outputDir // copy for timer
+        def outputPath = outputDir
+        // schedule a task to run after 2 minutes
+        // TODO: make this configurable
         def task = timer.runAfter(120 * 1000) {
+            log.info "removing track: ${dir.name}"
             ("remove-track.pl --trackLabel ${dir.name} --out ${outputPath} --delete").execute().waitForProcessOutput(System.out, System.err)
         }
 
@@ -92,12 +104,20 @@ class BlatCommandLine {
         dir.delete()
     }
 
-    private String createQueryFasta(File dir, String query) throws IOException {
-        String queryFileName = dir.absolutePath + '/query.fa'
-        PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(queryFileName)))
-        out.println('>query')
-        out.println(query)
-        out.close()
-        return queryFileName
+    private String createQueryFasta(File tmpDir, String query) throws IOException {
+        String queryFileName = tmpDir.absolutePath + File.separator + 'query.fa'
+        File queryFile
+        try {
+            queryFile = new File(queryFileName)
+            FileWriter queryFileWriter = new FileWriter(queryFile)
+            PrintWriter out = new PrintWriter(new BufferedWriter(queryFileWriter))
+            out.println('>query')
+            out.println(query)
+            out.close()
+            return queryFileName
+        } catch (IOException e) {
+            println e.stackTrace
+        }
+        return null
     }
 }
