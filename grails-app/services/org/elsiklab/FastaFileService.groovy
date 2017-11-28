@@ -2,6 +2,8 @@ package org.elsiklab
 
 import grails.transaction.Transactional
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
+import htsjdk.samtools.reference.FastaSequenceIndex
+import htsjdk.samtools.reference.FastaSequenceIndexCreator
 import org.biojava.nbio.core.sequence.DNASequence
 
 @Transactional
@@ -31,12 +33,14 @@ class FastaFileService {
         return new String(ret.getBases()).trim()
     }
 
+    /**
+     *
+     * @param fileName
+     * @return
+     */
     def generateFastaIndex(String fileName) {
-        println "@generateFastaIndex"
-        def indexProcess = "samtools faidx ${fileName}".execute()
-        def out = new StringBuilder()
-        indexProcess.waitForProcessOutput(out, new StringBuilder())
-        println "$out"
+        FastaSequenceIndex index = FastaSequenceIndexCreator.buildFromFasta(new File(fileName).toPath())
+        return index
     }
 
     def readIndexedFastaReverse(String file, String contig) {
