@@ -13,17 +13,18 @@ class AlternativeLoci extends BiologicalRegion {
 
     static constraints = {
         reversed nullable: true
+        fastaFile nullable: true
         description nullable: true
     }
 
+    String type
     String description
     Boolean reversed
 
-    Integer start_file
-    Integer end_file
-    String name_file
-    String orientation
-    FastaFile fasta_file
+    Integer startPosition
+    Integer endPosition
+    Integer orientation
+    FastaFile fastaFile
 
 
     static mapping = {
