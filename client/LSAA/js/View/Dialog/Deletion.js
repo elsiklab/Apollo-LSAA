@@ -3,7 +3,6 @@ define([
         'dojo/dom-construct',
         'dijit/focus',
         'dijit/form/TextBox',
-        'dijit/form/Select',
         'dojo/on',
         'dojo/request',
         'dijit/form/Button',
@@ -14,7 +13,6 @@ define([
         dom,
         focus,
         TextBox,
-        Select,
         on,
         request,
         Button,
@@ -22,11 +20,11 @@ define([
     ) {
         return declare(ActionBarDialog, {
             autofocus: false,
-            title: 'Create alternative loci',
+            title: 'Create an alternative loci of type Deletion',
 
             constructor: function(args) {
                 this.browser = args.browser;
-                this.setCallback    = args.setCallback || function() {};
+                this.setCallback = args.setCallback || function() {};
                 this.cancelCallback = args.cancelCallback || function() {};
                 this.contextPath = args.contextPath || '..';
             },
@@ -45,15 +43,13 @@ define([
                 new Button({
                     label: 'OK',
                     onClick: function() {
-                        request(thisB.contextPath + '/../alternativeLoci/createCorrection', {
+                        request(thisB.contextPath + '/../alternativeLoci/createDeletion', {
                             data: {
                                 start: thisB.start.get('value'),
                                 end: thisB.end.get('value'),
-                                coordinateFormat: thisB.coordinateFormat,
+                                coordinateFormat: "one_based",
                                 sequence: thisB.sequence.get('value'),
                                 description: thisB.description.get('value'),
-                                orientation: thisB.orientation.get('value'),
-                                sequencedata: thisB.sequencedata.value,
                                 organism: thisB.browser.config.dataset_id,
                                 username: thisB.user.email
                             },
@@ -76,12 +72,12 @@ define([
                     onClick: function() {
                         var highlight = thisB.browser.getHighlight();
                         if (highlight) {
-                            thisB.start.set('value', highlight.start);
+                            thisB.start.set('value', highlight.start + 1);
                             thisB.end.set('value', highlight.end);
                             thisB.sequence.set('value', highlight.ref);
-                            thisB.coordinateFormat = "zero_based";
+                            thisB.coordinateFormat = "one_based";
                         } else {
-                            console.error('No highlight set');
+                            console.log('No highlight set');
                         }
                     }
                 }).placeAt(actionBar);
@@ -90,32 +86,20 @@ define([
             show: function() {
                 dojo.addClass(this.domNode, 'setLSAA');
 
-                this.sequence = new TextBox({id: 'lsaa_name'});
+                this.sequence = new TextBox({id: 'lsaa_name', value: this.browser.refSeq.name});
                 this.start = new TextBox({id: 'lsaa_start'});
                 this.end = new TextBox({id: 'lsaa_end'});
-                this.description = new TextBox({id: 'lsaa_description'});
-                this.orientation = new Select({
-                    name: "orientation-select",
-                    width: "100 px",
-                    options: [
-                        { label: "Forward", value: "FORWARD" },
-                        { label: "Reverse", value: "REVERSE" }
-                    ]
-                });
-                this.sequencedata = dom.create('textarea', { style: { height: '60px', width: '100%' }, id: 'sequencedata' });
-                this.error = dom.create('div', { 'id': 'error', 'class': 'errormsg' });
                 this.coordinateFormat = "one_based";
+                this.description = new TextBox({id: 'lsaa_description'});
+                this.error = dom.create('div', { 'id': 'error', 'class': 'errormsg' });
                 this.user = JSON.parse(window.parent.getCurrentUser());
                 var br = function() { return dom.create('br'); };
 
                 this.set('content', [
-                    dom.create('p', { innerHTML: 'Provide coordinate and alternate sequences for assembly fix. See the <a href="../help">help guide</a> for additional information.' }), br(),
                     dom.create('label', { 'for': 'lsaa_name', innerHTML: 'Reference sequence: ' }), this.sequence.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_start', innerHTML: 'Start: ' }), this.start.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_end', innerHTML: 'End: ' }), this.end.domNode, br(),
-                    dom.create('label', { 'for': 'lsaa_description', innerHTML: 'Description: ' }), this.description.domNode, br(),
-                    dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
-                    dom.create('label', { 'for': 'sequencedata', innerHTML: 'Sequence data: ' }), this.sequencedata, br(),
+                    dom.create('label', { 'for': 'lsaa_descritpion', innerHTML: 'Description: ' }), this.description.domNode, br(),
                     this.error, br()
                 ]);
 

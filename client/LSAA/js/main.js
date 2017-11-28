@@ -4,8 +4,10 @@ define([
     'JBrowse/Plugin',
     'dijit/MenuItem',
     'dijit/MenuSeparator',
-    'LSAA/View/Dialog/LSAA',
-    'LSAA/View/Dialog/Reverse',
+    'LSAA/View/Dialog/Correction',
+    'LSAA/View/Dialog/Inversion',
+    'LSAA/View/Dialog/Insertion',
+    'LSAA/View/Dialog/Deletion',
     'LSAA/View/Dialog/SequenceSearch'
 ],
 function(
@@ -14,8 +16,10 @@ function(
     JBrowsePlugin,
     MenuItem,
     MenuSeparator,
-    LSAADialog,
-    ReverseDialog,
+    LsaaCorrectionDialog,
+    LsaaInversionDialog,
+    LsaaInsertionDialog,
+    LsaaDeletionDialog,
     SequenceSearchDialog
 ) {
     return declare(JBrowsePlugin, {
@@ -28,21 +32,42 @@ function(
             browser.afterMilestone('initView', function() {
                 browser.renderGlobalMenu('lsaa', { text: 'LSAA' }, browser.menuBar);
 
+                // Correction
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Annotate correction',
-                    iconClass: 'dijitIconBookmark',
+                    label: 'Annotate Correction',
+                    iconClass: 'dijitIconEdit',
                     onClick: function() {
-                        new LSAADialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                        new LsaaCorrectionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
                     }
                 }));
 
+                // Inversion
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Annotate inversion',
+                    label: 'Annotate Inversion',
                     iconClass: 'dijitIconUndo',
                     onClick: function() {
-                        new ReverseDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                        new LsaaInversionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
                     }
                 }));
+
+                // Insertion
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
+                    label: 'Annotate Insertion',
+                    iconClass: 'dijitEditorIcon dijitEditorIconRedo',
+                    onClick: function() {
+                        new LsaaInsertionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                    }
+                }));
+
+                // Deletion
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
+                    label: 'Annotate Deletion',
+                    iconClass: 'dijitIconCut',
+                    onClick: function() {
+                        new LsaaDeletionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                    }
+                }));
+
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'Search sequence',
                     iconClass: 'dijitIconSearch',
@@ -85,6 +110,20 @@ function(
                     }
                 }));
             });
+        },
+
+        getClientToken: function () {
+            if (this.runningApollo()) {
+                return this.getApollo().getClientToken();
+            }
+            else{
+                var returnItem = window.sessionStorage.getItem("clientToken");
+                if (!returnItem) {
+                    var randomNumber = this.generateRandomNumber(20);
+                    window.sessionStorage.setItem("clientToken", randomNumber);
+                }
+                return window.sessionStorage.getItem("clientToken");
+            }
         }
     });
 });
