@@ -64,13 +64,11 @@
                             <td>
                                 <g:if env="development">
                                     <!--<a href="${g.createLink(relativeUri: '../jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>-->
-                                    <a href="${g.createLink(relativeUri: + feature.featureLocation.sequence.organism.id + '/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax)}">JBrowse Link</a>
+                                    <a href="${g.createLink(relativeUri: + feature.featureLocation.sequence.organism.id + '/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + feature.featureLocation.fmin + '..' + feature.featureLocation.fmax)}&tracks=LSAA_annotations">JBrowse Link</a>
                                 %{-- URL format: http://localhost:8090/apollo/19/jbrowse/index.html?loc=Group1.1%3A599858..600273--}%
                                 </g:if>
                                 <g:if env="production">
-                                    <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.commonName+'/jbrowse/?loc=' + feature.name + '&organism='+feature.featureLocation.sequence.organism.id)}">alt locus</a>
-
-
+                                    <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.commonName+'/jbrowse/?loc=' + feature.name + '&organism='+feature.featureLocation.sequence.organism.id)}&tracks=LSAA_annotations">JBrowse Link</a>
                                 </g:if>
                             </td>
                         </tr>
