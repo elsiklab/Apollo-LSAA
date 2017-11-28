@@ -2,6 +2,7 @@ define([
     'dojo/_base/declare',
     'dojo/_base/array',
     'dojo/request',
+    'dojo/dom-construct',
     'dojo/on',
     'dojo/query',
     'dijit/Dialog',
@@ -14,6 +15,7 @@ function(
     declare,
     array,
     request,
+    dom,
     on,
     query,
     Dialog,
@@ -29,7 +31,6 @@ function(
     return declare(Dialog, {
         title: 'Sequence search',
         constructor: function(args) {
-            console.log('here2');
             this.browser = args.browser;
             this.contextPath = args.contextPath || '..';
             this.seqContext = args.browser.config.seqContext || '..';
@@ -44,17 +45,12 @@ function(
         },
         show: function() {
             var thisB = this;
-            console.log('here3');
             this.set('content', new Panel());
-            console.log('here4');
             this.inherited(arguments);
-            console.log('here5');
 
-            on(dojo.byId('sequence_search'), 'submit', function(evt) {
-                console.log('here33');
+            on(dojo.byId('sequence_search'), 'submit', function(event) {
                 thisB.search(thisB.refSeqName);
-                console.log('here6');
-                dojo.stopEvent(evt);
+                dojo.stopEvent(event);
             });
 
             this.getSequenceSearchTools(this.refSeqName);
@@ -73,7 +69,6 @@ function(
                 timeout: 5000 * 1000
             }).then(function(response) {
                 if (response.error) {
-                    console.error(response.error);
                     console.error(response.error);
                 }
                 if (response.sequence_search_tools.length === 0) {
@@ -103,9 +98,9 @@ function(
                 return;
             }
 
-            console.log(this.browser.config);
-            console.log(this.browser.config.dataset_id);
             var sequenceToolsSelect = dojo.byId('sequence_tools_select');
+            console.log("Search all sequences ??? ", dojo.byId('search_all_refseqs').checked);
+            // Note: this.browser.config.dataset_id holds the organism ID
             var postobj = {
                 track: refSeqName,
                 search: {
@@ -116,6 +111,7 @@ function(
                 operation: 'search_sequence',
                 organism: this.browser.config.dataset_id
             };
+            console.log("SS post object: ", postobj);
 
             query('#sequence_search_waiting').style('display', '');
             request(this.seqContext + '/../sequenceSearch/searchSequence', {
@@ -130,7 +126,9 @@ function(
                     return;
                 }
                 query('#sequence_search_waiting').style('display', 'none');
-                dojo.empty(query('#sequence_search_matches'));
+                console.log(query('#sequence_search_matches'));
+                var matches = dojo.byId('sequence_search_matches');
+                dom.empty(matches);
                 if (response.matches.length === 0) {
                     query('#sequence_search_message').style('display', '');
                     query('#sequence_search_matches').style('display', 'none');
