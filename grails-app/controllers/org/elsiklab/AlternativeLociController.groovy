@@ -3,8 +3,6 @@ package org.elsiklab
 import org.bbop.apollo.Feature
 import org.codehaus.groovy.grails.web.json.JSONObject
 
-import java.sql.Timestamp
-
 import static org.springframework.http.HttpStatus.*
 
 import grails.converters.JSON
@@ -24,6 +22,7 @@ class AlternativeLociController {
     def nameService
     def featureService
     def fastaFileService
+    def alternativeLociService
 
     def addLoci() {
 
@@ -190,12 +189,21 @@ class AlternativeLociController {
 
     @Transactional
     def delete(AlternativeLoci alternativeLociInstance) {
+        println "[DEBUG][AlternativeLociController][delete] ${alternativeLociInstance}"
         if (alternativeLociInstance == null) {
             notFound()
             return
         }
 
-        if (!alternativeLociInstance.reversed) alternativeLociInstance.fasta_file.delete()
+        if (!alternativeLociInstance.reversed) {
+            println "[DEBUG][AlternativeLociController][delete] removing fasta_file ${alternativeLociInstance.fastaFile}"
+            if (alternativeLociInstance.fastaFile) {
+                FastaFile fastaFile = alternativeLociInstance.fastaFile
+                File file = new File(fastaFile.fileName)
+                if (file.exists()) file.delete()
+                fastaFile.delete()
+            }
+        }
         alternativeLociInstance.delete(flush:true)
 
         redirect(action: 'index')
@@ -425,90 +433,90 @@ class AlternativeLociController {
     }
 
     def createCorrection() {
-        println "@createCorrection: ${params.toString()}"
-        String name = UUID.randomUUID()
-        String type = "CORRECTION"
-        String description = params.description
-        String sequenceName = params.sequence
-        String orientation = params.orientation
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        println "[DEBUG][AlternativeLociController][createCorrection] ${requestObject.toString()}"
         // TODO: this is a crude way of dealing with username
         String username = params.username
         User user = User.findByUsername(username)
-
         Organism organism = Organism.findById(params.organism)
-        int start = Integer.parseInt(params.start)
-        int end = Integer.parseInt(params.end)
-        String coordinateFormat = params.coordinateFormat
-
-        if (coordinateFormat == "one_based") {
-            // bringing the positions to internal zero-based
-            start -= 1
-        }
-
-        println "Organism: ${organism}"
-        println "Seq Length: ${params.sequencedata.length()}"
-
+        println "[DEBUG][AlternaitveLociController][createCorrection] Organism: ${organism}"
         if (organism) {
-            Sequence seq = null
-            def results = Sequence.executeQuery(
-                    "SELECT DISTINCT s FROM Sequence s WHERE s.name =:querySequenceName AND s.organism =:queryOrganism",
-                    [querySequenceName: sequenceName, queryOrganism: organism])
-
-            if (results.size() == 0) {
-                render text: ([error: 'sequence ' + sequenceName + ' not found for organism ' + organism.commonName] as JSON)
-            }
-            else if (results.size() == 1) {
-                seq = results.iterator().next()
+            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+            if (sequence) {
+                def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
+                featureService.setOwner(alternativeLoci, user)
+                render ([success: true] as JSON)
             }
             else {
-                log.warn "HQL for fetching sequence returned more than one result; using the first most"
-                seq = results.iterator().next()
+                render text: ([error: 'No sequence found'] as JSON), status: 500
             }
-            println "Sequence is: ${seq}"
+        }
+        else {
+            render text: ([error: 'No organism found'] as JSON), status: 500
+        }
+    }
 
+    def createInversion() {
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        println "[DEBUG][AlternativeLociController][createInversion] ${requestObject.toString()}"
+        // TODO: this is a crude way of dealing with username
+        String username = params.username
+        User user = User.findByUsername(username)
+        Organism organism = Organism.findById(params.organism)
+        println "[DEBUG][AlternaitveLociController][createInversion] Organism: ${organism}"
+        if (organism) {
+            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+            if (sequence) {
+                def alternativeLoci = alternativeLociService.createInversion(requestObject, organism, sequence)
+                featureService.setOwner(alternativeLoci, user)
+                render ([success: true] as JSON)
+            }
+            else {
+                render text: ([error: 'No sequence found'] as JSON), status: 500
+            }
+        }
+        else {
+            render text: ([error: 'No organism found'] as JSON), status: 500
+        }
+    }
 
-            if (seq) {
-                println "Creating FASTA file to ${grailsApplication.config.lsaa.appStoreDirectory}"
-                String filePrefix = organism.commonName + '-' + sequenceName + '-' + name
-                def file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + filePrefix + ".fa")
-                file << ">${name} ${type} ${sequenceName} ${organism.commonName}\n"
-                file << params.sequencedata
+    def createInsertion() {
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        println "[DEBUG][AlternativeLociController][createInsertion] ${requestObject.toString()}"
+        // TODO: this is a crude way of dealing with username
+        String username = params.username
+        User user = User.findByUsername(username)
+        Organism organism = Organism.findById(params.organism)
+        println "[DEBUG][AlternaitveLociController][createInsertion] Organism: ${organism}"
+        if (organism) {
+            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+            if (sequence) {
+                def alternativeLoci = alternativeLociService.createInsertion(requestObject, organism, sequence)
+                featureService.setOwner(alternativeLoci, user)
+                render ([success: true] as JSON)
+            }
+            else {
+                render text: ([error: 'No sequence found'] as JSON), status: 500
+            }
+        }
+        else {
+            render text: ([error: 'No organism found'] as JSON), status: 500
+        }
+    }
 
-                fastaFileService.generateFastaIndex(file.absolutePath)
-
-                FastaFile fastaFile = new FastaFile(
-                        filename: file.getAbsolutePath(),
-                        originalname: filePrefix,
-                        username: 'admin',
-                        dateCreated: new Date(),
-                        lastModified: new Date(),
-
-                ).save(flush: true)
-
-                // Corrections will always default their start_file and end_file to 0 and len(sequence) - 1, respectively
-                AlternativeLoci altLoci = new AlternativeLoci(
-                        name: filePrefix + '-alt',
-                        uniqueName: name,
-                        description: description,
-                        start_file: 0,
-                        end_file: params.sequencedata.length() - 1,
-                        orientation: orientation,
-                        name_file: fastaFile.filename,
-                        fasta_file: fastaFile,
-                ).save(flush: true)
-
-                featureService.setOwner(altLoci, user)
-
-                FeatureLocation featureLoc = new FeatureLocation(
-                        fmin: start,
-                        fmax: end,
-                        strand: 1,
-                        feature: altLoci,
-                        sequence: seq
-                ).save(flush: true)
-
-                altLoci.addToFeatureLocations(featureLoc)
-
+    def createDeletion() {
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        println "[DEBUG][AlternativeLociController][createDeletion] ${requestObject.toString()}"
+        // TODO: this is a crude way of dealing with username
+        String username = params.username
+        User user = User.findByUsername(username)
+        Organism organism = Organism.findById(params.organism)
+        println "[DEBUG][AlternaitveLociController][createDeletion] Organism: ${organism}"
+        if (organism) {
+            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+            if (sequence) {
+                def alternativeLoci = alternativeLociService.createDeletion(requestObject, organism, sequence)
+                featureService.setOwner(alternativeLoci, user)
                 render ([success: true] as JSON)
             }
             else {

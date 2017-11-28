@@ -26,7 +26,7 @@ class AltLociTrackController {
             name it.name
             start it.featureLocation.fmin
             end it.featureLocation.fmax
-            type it.reversed ? "Inversion" : "Correction"
+            type it.type
             description it.description
         }
 
