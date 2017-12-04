@@ -24,8 +24,66 @@ class AlternativeLociController {
     def fastaFileService
     def alternativeLociService
 
-    def addLoci() {
 
+    def index(Integer max) {
+        params.max = Math.min(max ?: 15, 100)
+
+        def c = Feature.createCriteria()
+
+        def list = c.list(max: params.max, offset:params.offset) {
+
+            if(params.sort == 'owners') {
+                owners {
+                    order('username', params.order)
+                }
+            }
+            if(params.sort == 'sequencename') {
+                featureLocations {
+                    sequence {
+                        order('name', params.order)
+                    }
+                }
+            }
+            else if(params.sort == 'name') {
+                order('name', params.order)
+            }
+            else if(params.sort == 'cvTerm') {
+                order('class', params.order)
+            }
+            else if(params.sort == 'organism') {
+                featureLocations {
+                    sequence {
+                        organism {
+                            order('commonName', params.order)
+                        }
+                    }
+                }
+            }
+            else if(params.sort == 'lastUpdated') {
+                order('lastUpdated', params.order)
+            }
+
+            if(params.ownerName != null && params.ownerName != '') {
+                owners {
+                    ilike('username', '%' + params.ownerName + '%')
+                }
+            }
+            if(params.organismName != null && params.organismName != '') {
+                featureLocations {
+                    sequence {
+                        organism {
+                            ilike('commonName', '%' + params.organismName + '%')
+                        }
+                    }
+                }
+            }
+            'eq'('class', AlternativeLoci.class.name)
+        }
+        println list.toString()
+        render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
+    }
+
+    def addLoci() {
         Sequence sequence = Sequence.findByName(params.sequence)
         if(!sequence) {
             response.status = 500
@@ -104,11 +162,13 @@ class AlternativeLociController {
     }
 
     def create() {
+        // TODO: remove
         respond new AlternativeLoci(params)
     }
 
     @Transactional
     def save() {
+        // TODO: remove
         def sequence = Sequence.findById(params.name)
         if(sequence) {
             def fastaFile = FastaFile.findById(params.fasta_file)
@@ -156,34 +216,41 @@ class AlternativeLociController {
 
     @Transactional
     def update(AlternativeLoci instance) {
-        def sequence = Sequence.findById(params.name)
-        if(sequence) {
-            def fastaFile = FastaFile.findById(params.fasta_file)
-            if(fastaFile) {
-                def file = new File(fastaFile.filename)
-                if(file) {
-                    instance.description = params.description
-                    instance.start_file = Integer.parseInt(params.start_file) ?: 0
-                    instance.end_file = Integer.parseInt(params.end_file) ?: file.length()
-                    instance.name_file = params.name_file
-                    instance.fasta_file = fastaFile
-                    instance.featureLocation.fmin = Integer.parseInt(params.start)
-                    instance.featureLocation.fmax = Integer.parseInt(params.end)
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        println "[AlternativeLociController][update] requestObject: ${requestObject.toString()}"
+        def sequence = Sequence.findById(requestObject.sequence)
+        if (sequence) {
+            // sequence exsits
+            def fastaFile = FastaFile.findById(requestObject.fastaFile)
+            if (fastaFile) {
+                // fastaFile exists
+                def file = new File(fastaFile.fileName)
+                if (file) {
+                    // file exists
+                    instance.name = requestObject.name
+                    instance.description = requestObject.description
+                    instance.startPosition = Integer.parseInt(requestObject.startPosition - 1) ?: 0
+                    instance.endPosition = Integer.parseInt(requestObject.endPosition) ?: file.length()
+                    instance.featureLocation.fmin = Integer.parseInt(requestObject.start) - 1
+                    instance.featureLocation.fmax = Integer.parseInt(requestObject.end)
                     instance.featureLocation.sequence = sequence
-                    // gives error on save currently
+                    instance.orientation = requestObject.orientation
+                    println "INSTANCE VERSION: ${instance.version}"
+                    println "Trying to save"
                     instance.save(flush: true, failOnError: true)
-                    redirect(action: 'edit')
+
+                    render view: 'edit', model: [alternativeLociInstance: instance]
                 }
                 else {
-                    render text: ([error: 'FASTA file path was moved'] as JSON), status: 500
+                    render text: ([error: 'FASTA file does not exist'] as JSON), status: 500
                 }
             }
             else {
-                render text: ([error: 'No FASTA file found'] as JSON), status: 500
+                render text: ([error: 'No FastaFile found'] as JSON), status: 500
             }
         }
         else {
-            render text: ([error: 'No sequence found'] as JSON), status: 500
+            render text: ([error: 'No Sequence found'] as JSON), status: 500
         }
     }
 
@@ -219,63 +286,6 @@ class AlternativeLociController {
         }
     }
 
-    def index(Integer max) {
-        params.max = Math.min(max ?: 15, 100)
-
-        def c = Feature.createCriteria()
-
-        def list = c.list(max: params.max, offset:params.offset) {
-
-            if(params.sort == 'owners') {
-                owners {
-                    order('username', params.order)
-                }
-            }
-            if(params.sort == 'sequencename') {
-                featureLocations {
-                    sequence {
-                        order('name', params.order)
-                    }
-                }
-            }
-            else if(params.sort == 'name') {
-                order('name', params.order)
-            }
-            else if(params.sort == 'cvTerm') {
-                order('class', params.order)
-            }
-            else if(params.sort == 'organism') {
-                featureLocations {
-                    sequence {
-                        organism {
-                            order('commonName', params.order)
-                        }
-                    }
-                }
-            }
-            else if(params.sort == 'lastUpdated') {
-                order('lastUpdated', params.order)
-            }
-
-            if(params.ownerName != null && params.ownerName != '') {
-                owners {
-                    ilike('username', '%' + params.ownerName + '%')
-                }
-            }
-            if(params.organismName != null && params.organismName != '') {
-                featureLocations {
-                    sequence {
-                        organism {
-                            ilike('commonName', '%' + params.organismName + '%')
-                        }
-                    }
-                }
-            }
-            'eq'('class', AlternativeLoci.class.name)
-        }
-        println list.toString()
-        render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
-    }
     def createReversal() {
         println "@createReversal: ${params.toString()}"
         String name = UUID.randomUUID()
@@ -530,5 +540,12 @@ class AlternativeLociController {
 
     def getAlternativeLoci() {
         println "@getAlternativeLoci: ${params.toString()}"
+    }
+
+    def viewFastaFile() {
+        JSONObject requestObject = permissionService.handleInput(request, params)
+        FastaFile ff = FastaFile.findById(requestObject.fastaFile)
+        String fastaSequence = new File(ff.fileName).text
+        render(text: fastaSequence, contentType: "text/plain", encoding: "UTF-8")
     }
 }
