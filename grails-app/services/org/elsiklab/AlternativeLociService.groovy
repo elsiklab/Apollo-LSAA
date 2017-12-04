@@ -23,7 +23,7 @@ class AlternativeLociService {
      * @return
      */
     def createCorrection(JSONObject jsonObject, Organism organism, Sequence sequence) {
-        println "[DEBUG][AlternativeLociService][createCorrection] ${jsonObject.toString()}"
+        log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
         String type = "CORRECTION"
         String description = jsonObject.description
@@ -37,7 +37,7 @@ class AlternativeLociService {
             start -= 1
         }
 
-        println "[DEBUG][AlternaitveLociService][createCorrection] Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
+        log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
         String fastaFilePrefix = "${organism.id}-${sequenceName}-${name}"
         String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
         def file = new File(fastaFileName)
@@ -86,7 +86,7 @@ class AlternativeLociService {
      * @return
      */
     def createInversion(JSONObject jsonObject, Organism organism, Sequence sequence) {
-        println "[DEBUG][AlternativeLociService][createInversion] ${jsonObject.toString()}"
+        log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
         String type = "INVERSION"
         String description = jsonObject.description
@@ -132,7 +132,7 @@ class AlternativeLociService {
      * @return
      */
     def createInsertion(JSONObject jsonObject, Organism organism, Sequence sequence) {
-        println "[DEBUG][AlternativeLociService][createInsertion] ${jsonObject.toString()}"
+        log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
         String type = "INSERTION"
         String description = jsonObject.description
@@ -146,7 +146,7 @@ class AlternativeLociService {
         }
         int end = start + 1
 
-        println "[DEBUG][AlternaitveLociService][createInsertion] Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
+        log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
         String fastaFilePrefix = "${organism.id}-${sequenceName}-${name}"
         String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
         def file = new File(fastaFileName)
@@ -196,7 +196,7 @@ class AlternativeLociService {
      * @return
      */
     def createDeletion(JSONObject jsonObject, Organism organism, Sequence sequence) {
-        println "[DEBUG][AlternativeLociService][createDeletion] ${jsonObject.toString()}"
+        log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
         String type = "DELETION"
         String description = jsonObject.description
@@ -251,7 +251,7 @@ class AlternativeLociService {
             log.warn "HQL query for fetching sequence returned more than one result; using the first most"
             sequence = results.first()
         }
-        println "[DEBUG][AlternaitveLociService][getSequence] Sequence is: ${sequence}"
+        log.debug "Sequence is: ${sequence}"
         return sequence
     }
 }

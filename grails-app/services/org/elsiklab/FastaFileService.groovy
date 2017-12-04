@@ -24,12 +24,12 @@ class FastaFileService {
             indexedFasta = new IndexedFastaSequenceFile(new File(file))
         }
         catch(Exception e) {
-            println "Index not found for: ${file}; generating one..."
+            log.debug "Index not found for: ${file}; generating one..."
             generateFastaIndex(file)
             indexedFasta = new IndexedFastaSequenceFile(new File(file))
         }
         def ret = indexedFasta.getSubsequenceAt(contig, start, end)
-        println "return seq size: ${new String(ret.getBases()).trim().length()}"
+        log.debug "return seq size: ${new String(ret.getBases()).trim().length()}"
         return new String(ret.getBases()).trim()
     }
 

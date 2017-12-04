@@ -79,7 +79,7 @@ class AlternativeLociController {
             }
             'eq'('class', AlternativeLoci.class.name)
         }
-        println list.toString()
+        log.debug list.toString()
         render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
     }
 
@@ -217,7 +217,7 @@ class AlternativeLociController {
     @Transactional
     def update(AlternativeLoci instance) {
         JSONObject requestObject = permissionService.handleInput(request, params)
-        println "[AlternativeLociController][update] requestObject: ${requestObject.toString()}"
+        log.debug "requestObject: ${requestObject.toString()}"
         def sequence = Sequence.findById(requestObject.sequence)
         if (sequence) {
             // sequence exsits
@@ -235,8 +235,6 @@ class AlternativeLociController {
                     instance.featureLocation.fmax = Integer.parseInt(requestObject.end)
                     instance.featureLocation.sequence = sequence
                     instance.orientation = requestObject.orientation
-                    println "INSTANCE VERSION: ${instance.version}"
-                    println "Trying to save"
                     instance.save(flush: true, failOnError: true)
 
                     render view: 'edit', model: [alternativeLociInstance: instance]
@@ -256,14 +254,13 @@ class AlternativeLociController {
 
     @Transactional
     def delete(AlternativeLoci alternativeLociInstance) {
-        println "[DEBUG][AlternativeLociController][delete] ${alternativeLociInstance}"
         if (alternativeLociInstance == null) {
             notFound()
             return
         }
 
         if (!alternativeLociInstance.reversed) {
-            println "[DEBUG][AlternativeLociController][delete] removing fasta_file ${alternativeLociInstance.fastaFile}"
+            log.info "removing fasta_file ${alternativeLociInstance.fastaFile}"
             if (alternativeLociInstance.fastaFile) {
                 FastaFile fastaFile = alternativeLociInstance.fastaFile
                 File file = new File(fastaFile.fileName)
@@ -287,7 +284,6 @@ class AlternativeLociController {
     }
 
     def createReversal() {
-        println "@createReversal: ${params.toString()}"
         String name = UUID.randomUUID()
         String type = "REVERSAL"
         String description = params.description
@@ -306,7 +302,7 @@ class AlternativeLociController {
             start -= 1
         }
 
-        println "Organism is: ${organism}"
+        log.debug "Organism is: ${organism}"
         if (organism) {
             // TODO: HQL - check for more than one
             Sequence seq = null
@@ -333,20 +329,20 @@ class AlternativeLociController {
 
                 //FastaFile fastaFile = FastaFile.findByOrganism(organism) // right now this will always return null
                 // TODO: HQL - check for more than one
-                println "Checking if FastaFile representation of ${sequenceName} exists"
+                log.debug "Checking if FastaFile representation of ${sequenceName} exists"
                 def fastaFileQueryResults = FastaFile.executeQuery(
                         "SELECT DISTINCT f FROM FastaFile f WHERE f.originalname =:querySequenceName AND f.organism =:queryOrganism",
                         [querySequenceName: sequenceName, queryOrganism: organism])
 
                 FastaFile fastaFile
                 if (fastaFileQueryResults.size() > 0) {
-                    println "yes it does exist"
+                    log.debug "yes it does exist"
                     fastaFile = fastaFileQueryResults.iterator().next()
                 }
 
                 if (fastaFile) {
-                    println "[ A ] FastaFile already exists with ${sequenceName} for organism ${organism.commonName}"
-                    println "[ A ] creating altLoci and its featureLocation"
+                    log.debug "[ A ] FastaFile already exists with ${sequenceName} for organism ${organism.commonName}"
+                    log.debug "[ A ] creating altLoci and its featureLocation"
                     AlternativeLoci altLoci = new AlternativeLoci(
                             name: params.sequence,
                             uniqueName: name,
@@ -375,18 +371,18 @@ class AlternativeLociController {
                 }
                 else {
                     // read existing split genome fasta
-                    println organism.directory
-                    println "[ B ] expecting split FASTA to be in ${organism.directory}/fasta/"
+                    log.debug organism.directory
+                    log.debug "[ B ] expecting split FASTA to be in ${organism.directory}/fasta/"
                     String path = organism.directory + "/fasta/" + organism.commonName + '-' + sequenceName + ".fa"
 
                     FastaFile newFastaFile
                     File file = new File(path)
 
                     if (file.exists() && !file.isDirectory()) {
-                        println "[ B1 ] FASTA representation of ${sequenceName} already exists"
+                        log.debug "[ B1 ] FASTA representation of ${sequenceName} already exists"
                     }
                     else {
-                        println "[ B2 ] FASTA representation of ${sequenceName} does not exist in directory"
+                        log.debug "[ B2 ] FASTA representation of ${sequenceName} does not exist in directory"
                         String fileName = organism.commonName + '-' + sequenceName + ".fa"
                         file = new File(grailsApplication.config.lsaa.appStoreDirectory + "/" + sequenceName)
                         String genomeFile = organism.blatdb.replace(".2bit", ".fa")
@@ -396,7 +392,7 @@ class AlternativeLociController {
                         }
                     }
 
-                    println "[ B ] creating FastaFile for ${file.getAbsolutePath()}"
+                    log.debug "[ B ] creating FastaFile for ${file.getAbsolutePath()}"
                     newFastaFile = new FastaFile(
                             filename: file.getAbsolutePath(),
                             username: 'admin',
@@ -407,7 +403,7 @@ class AlternativeLociController {
                     ).save(flush: true)
 
                     // Now create the AltLoci for reversal
-                    println "[ B ] creating altLoci and its featureLocation"
+                    log.debug "[ B ] creating altLoci and its featureLocation"
                     AlternativeLoci altLoci = new AlternativeLoci(
                             name: sequenceName,
                             uniqueName: name,
@@ -444,12 +440,12 @@ class AlternativeLociController {
 
     def createCorrection() {
         JSONObject requestObject = permissionService.handleInput(request, params)
-        println "[DEBUG][AlternativeLociController][createCorrection] ${requestObject.toString()}"
+        log.debug "${requestObject.toString()}"
         // TODO: this is a crude way of dealing with username
         String username = params.username
         User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
-        println "[DEBUG][AlternaitveLociController][createCorrection] Organism: ${organism}"
+        log.debug "Organism: ${organism}"
         if (organism) {
             Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
             if (sequence) {
@@ -468,12 +464,12 @@ class AlternativeLociController {
 
     def createInversion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
-        println "[DEBUG][AlternativeLociController][createInversion] ${requestObject.toString()}"
+        log.debug "${requestObject.toString()}"
         // TODO: this is a crude way of dealing with username
         String username = params.username
         User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
-        println "[DEBUG][AlternaitveLociController][createInversion] Organism: ${organism}"
+        log.debug "Organism: ${organism}"
         if (organism) {
             Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
             if (sequence) {
@@ -492,12 +488,12 @@ class AlternativeLociController {
 
     def createInsertion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
-        println "[DEBUG][AlternativeLociController][createInsertion] ${requestObject.toString()}"
+        log.debug "${requestObject.toString()}"
         // TODO: this is a crude way of dealing with username
         String username = params.username
         User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
-        println "[DEBUG][AlternaitveLociController][createInsertion] Organism: ${organism}"
+        log.debug "Organism: ${organism}"
         if (organism) {
             Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
             if (sequence) {
@@ -516,12 +512,12 @@ class AlternativeLociController {
 
     def createDeletion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
-        println "[DEBUG][AlternativeLociController][createDeletion] ${requestObject.toString()}"
+        log.debug "${requestObject.toString()}"
         // TODO: this is a crude way of dealing with username
         String username = params.username
         User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
-        println "[DEBUG][AlternaitveLociController][createDeletion] Organism: ${organism}"
+        log.debug "Organism: ${organism}"
         if (organism) {
             Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
             if (sequence) {
@@ -539,7 +535,7 @@ class AlternativeLociController {
     }
 
     def getAlternativeLoci() {
-        println "@getAlternativeLoci: ${params.toString()}"
+        log.debug "${params.toString()}"
     }
 
     def viewFastaFile() {

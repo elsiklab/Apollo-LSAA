@@ -38,7 +38,7 @@ class ExportDataController {
      * @return
      */
     def getTransformedJSON() {
-        println "@getTransformedJson: ${params.toString()}"
+        log.debug "${params.toString()}"
         def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
         if (organism) {
             def transformedJsonObject = exportDataService.getTransformationAsJSON(organism)
@@ -61,7 +61,7 @@ class ExportDataController {
      * @return
      */
     def getTransformedFasta() {
-        println "@getTransformedFasta: ${params.toString()}"
+        log.debug "${params.toString()}"
         def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
         if (organism) {
             def transformedFastaMap = exportDataService.getTransformationAsFASTA(organism)

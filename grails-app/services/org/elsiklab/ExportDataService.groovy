@@ -25,6 +25,7 @@ class ExportDataService {
      * @param orgaism
      */
     def getTransformationAsJSON(Organism organism) {
+        log.debug "organism ${organism.name}"
         def altLociList = getAltLoci(organism)
         def sequenceToAltLociMap = [:]
         JSONObject returnObject = new JSONObject()
@@ -169,17 +170,17 @@ class ExportDataService {
                 // TODO: a better way of handling the jump between 0-based and 1-based
                 if (segment.type == "reference") {
                     if (segment.fmax + 1 > sequence.end) {
-                        println "[X1] Fetching for ${segment.fmin} ${segment.fmax}"
+                        log.debug "[X1] Fetching for ${segment.fmin} ${segment.fmax}"
                         fastaSequence += fastaFileService.readIndexedFastaRegion(segment.source, segment.name, segment.fmin, segment.fmax)
                     }
                     else {
-                        println "[X2] Fetching for ${segment.fmin} ${segment.fmax + 1}"
+                        log.debug "[X2] Fetching for ${segment.fmin} ${segment.fmax + 1}"
                         fastaSequence += fastaFileService.readIndexedFastaRegion(segment.source, segment.name, segment.fmin, segment.fmax + 1)
                     }
                     fastaSequence += "|"
                 }
                 else if (segment.type == "inversion") {
-                    println "[Y] Fetching for ${segment.fmin + 1} ${segment.fmax}"
+                    log.debug "[Y] Fetching for ${segment.fmin + 1} ${segment.fmax}"
                     String sequenceString = fastaFileService.readIndexedFastaRegion(segment.source, segment.source_contig, segment.fmin + 1, segment.fmax)
                     fastaSequence += sequenceString.reverse()
                     fastaSequence += '|'
