@@ -27,9 +27,9 @@
                 </fieldset>
                 <fieldset class="buttons">
                     <g:actionSubmit class="save" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" />
-                    <g:actionSubmit class="back" action="show" value="Back" />
+                    <g:actionSubmit class="back" action="index" value="Back" />
                     <g:unless test="${alternativeLociInstance?.type == 'INVERSION'}">
-                        <g:actionSubmit class="view" action="index" value="View Fasta file" />
+                        <g:actionSubmit class="view" action="viewFastaFile" value="View Fasta file" />
                     </g:unless>
                 </fieldset>
             </g:form>
