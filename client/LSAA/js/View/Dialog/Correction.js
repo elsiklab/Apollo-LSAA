@@ -53,7 +53,7 @@ define([
                                 sequence: thisB.sequence.get('value'),
                                 description: thisB.description.get('value'),
                                 orientation: thisB.orientation.get('value'),
-                                sequence_data: thisB.sequencedata.value,
+                                sequenceData: thisB.sequencedata.value,
                                 organism: thisB.browser.config.dataset_id,
                                 username: thisB.user.email
                             },
