@@ -14,28 +14,30 @@ import org.ho.yaml.exception.YamlException
 class ExportDataService {
 
     def fastaFileService
-    def sequenceService
 
-    def serviceMethod() {
-
-    }
+    public static final String REFERENCE = "reference"
 
     /**
-     *
-     * @param orgaism
+     * Given an organism, generate a JSON representation of an alternate version of the sequence by
+     * incorporating all alternative loci
+     * @param organism
      */
-    def getTransformationAsJSON(Organism organism) {
-        log.debug "organism ${organism.name}"
+    def getTransformationAsJson(Organism organism) {
+        log.debug "organism ${organism.commonName}"
         def altLociList = getAltLoci(organism)
+        log.debug "altLoci list size for organism: ${altLociList.size()}"
         def sequenceToAltLociMap = [:]
         JSONObject returnObject = new JSONObject()
 
         altLociList.each { altLoci ->
+            // get altLoci feature location sequence name
             String sequenceName = altLoci.featureLocation.sequence.name
             if (!sequenceToAltLociMap.get(sequenceName)) {
+                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
                 sequenceToAltLociMap[sequenceName] = [altLoci]
             }
             else {
+                // append to the array of altLoci
                 sequenceToAltLociMap[sequenceName] += [altLoci]
             }
         }
@@ -45,7 +47,7 @@ class ExportDataService {
             def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
             // sort the altLoci based on their fmin
             altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJSON(sequence, altLociForSequenceList).get("transformation")
+            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
             returnObject.put(sequenceName, transformedJsonArray)
         }
 
@@ -53,77 +55,86 @@ class ExportDataService {
     }
 
     /**
-     *
+     * Given a sequence and a list of alternative loci, generate a JSON representation of an alternate version
+     * of the sequence by incorporating all given alternative loci
      *
      * @param sequence
      * @param altLociList
      * @return
      */
-    def getTransformationAsJSON(Sequence sequence, def altLociList) {
-
-        JSONObject returnObject = new JSONObject()
-        JSONArray array = new JSONArray()
+    def getTransformationAsJson(Sequence sequence, def altLociList) {
+        log.debug "generate transformation JSON for ${sequence.name} and ${altLociList.size()} loci"
+        JSONArray transformationArray = new JSONArray()
+        def previousAltLoci
         int previousAltLociFmax
+        String genomeFasta = sequence.organism.directory + File.separator + sequence.organism.genomeFasta
+        long start = System.currentTimeMillis()
 
         for (altLoci in altLociList) {
             JSONObject sequenceJsonObject = new JSONObject()
             sequenceJsonObject.put("name", sequence.name)
             sequenceJsonObject.put("description", "reference genome")
-            sequenceJsonObject.put("type", "reference")
-            sequenceJsonObject.put("source", sequence.organism.blatdb.replace(".2bit", ".fa"))
-            sequenceJsonObject.put("source_contig", sequence.name)
+            sequenceJsonObject.put("type", REFERENCE)
+            sequenceJsonObject.put("source", genomeFasta)
+            sequenceJsonObject.put("source_sequence", sequence.name)
             if (previousAltLociFmax) {
-                sequenceJsonObject.put("fmin", previousAltLociFmax + 1)
+                sequenceJsonObject.put("fmin", previousAltLociFmax)
             }
             else {
                 sequenceJsonObject.put("fmin", sequence.start)
             }
-            sequenceJsonObject.put("fmax", (altLoci.featureLocation.fmin - 1))
+            sequenceJsonObject.put("fmax", (altLoci.featureLocation.fmin))
             sequenceJsonObject.put("strand", 1)
-            array.add(sequenceJsonObject)
+            transformationArray.add(sequenceJsonObject)
 
             JSONObject altLociJsonObject = new JSONObject()
             altLociJsonObject.put("name", altLoci.uniqueName)
-            if (altLoci.reversed) {
-                altLociJsonObject.put("source_contig", sequence.name)
+
+            if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
+                altLociJsonObject.put("source_sequence", sequence.name)
             }
             else {
-                altLociJsonObject.put("source_contig", altLoci.uniqueName)
+                altLociJsonObject.put("source_sequence", altLoci.uniqueName)
             }
+
+            altLociJsonObject.put("source_start", altLoci.startPosition)
+            altLociJsonObject.put("source_end", altLoci.endPosition)
             altLociJsonObject.put("description", altLoci.description)
-            if (altLoci.reversed) {
-                // TODO: add a proper attribute to organism to hold the actual genome fasta name
-                altLociJsonObject.put("source", sequence.organism.blatdb.replace(".2bit", ".fa"))
-                altLociJsonObject.put("type", "inversion")
+
+            if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
+                altLociJsonObject.put("source", genomeFasta)
             }
             else {
-                altLociJsonObject.put("source", altLoci.fasta_file.filename)
-                altLociJsonObject.put("type", "correction")
+                altLociJsonObject.put("source", altLoci.fastaFile.fileName)
             }
+            altLociJsonObject.put("type", altLoci.type.toLowerCase())
             altLociJsonObject.put("fmin", altLoci.featureLocation.fmin)
             altLociJsonObject.put("fmax", altLoci.featureLocation.fmax)
             altLociJsonObject.put("strand", altLoci.featureLocation.strand)
             altLociJsonObject.put("orientation", altLoci.orientation)
-            array.add(altLociJsonObject)
+            transformationArray.add(altLociJsonObject)
             previousAltLociFmax = altLoci.featureLocation.fmax
+            previousAltLoci = altLoci
         }
 
         JSONObject finalSequenceJsonObject = new JSONObject()
         finalSequenceJsonObject.put("name", sequence.name)
         finalSequenceJsonObject.put("description", "reference genome")
-        finalSequenceJsonObject.put("type", "reference")
-        finalSequenceJsonObject.put("source", sequence.organism.blatdb.replace(".2bit", ".fa"))
-        finalSequenceJsonObject.put("source_contig", sequence.name)
-        finalSequenceJsonObject.put("fmin", previousAltLociFmax + 1)
+        finalSequenceJsonObject.put("type", REFERENCE)
+        finalSequenceJsonObject.put("source", genomeFasta)
+        finalSequenceJsonObject.put("source_sequence", sequence.name)
+        finalSequenceJsonObject.put("fmin", previousAltLociFmax)
         finalSequenceJsonObject.put("fmax", sequence.end)
-        array.put(finalSequenceJsonObject)
+        transformationArray.put(finalSequenceJsonObject)
 
-        returnObject.put("transformation", array)
-        return returnObject
+        long end = System.currentTimeMillis()
+        log.debug "time taken to generate transformationArray: ${end - start} ms"
+
+        return transformationArray
     }
 
     /**
-     *
+     * Given an organism, return all of its alternative loci
      * @param organism
      * @return
      */
@@ -139,12 +150,14 @@ class ExportDataService {
     }
 
     /**
-     *
-     *
+     * Given an organism, generate a FASTA representation of an alternate version of the sequence by
+     * incorporating all alternative loci
      * @param organism
      */
-    def getTransformationAsFASTA(Organism organism) {
+    def getTransformationAsFasta(Organism organism) {
+        log.debug "organism ${organism.commonName}"
         def altLociList = getAltLoci(organism)
+        log.debug "altLoci list size for organism: ${altLociList.size()}"
         def sequenceToAltLociMap = [:]
         def transformedFastaMap = [:]
 
@@ -163,72 +176,51 @@ class ExportDataService {
             def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
             // sort the altLoci based on their fmin
             altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJSON(sequence, altLociForSequenceList).get("transformation")
-
+            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
+            long start = System.currentTimeMillis()
+            String name = "${sequenceName}-${UUID.randomUUID().toString()}"
+            JSONArray descriptionArray = new JSONArray()
             String fastaSequence = ""
-            for (JSONObject segment : transformedJsonArray) {
-                // TODO: a better way of handling the jump between 0-based and 1-based
-                if (segment.type == "reference") {
-                    if (segment.fmax + 1 > sequence.end) {
-                        log.debug "[X1] Fetching for ${segment.fmin} ${segment.fmax}"
-                        fastaSequence += fastaFileService.readIndexedFastaRegion(segment.source, segment.name, segment.fmin, segment.fmax)
-                    }
-                    else {
-                        log.debug "[X2] Fetching for ${segment.fmin} ${segment.fmax + 1}"
-                        fastaSequence += fastaFileService.readIndexedFastaRegion(segment.source, segment.name, segment.fmin, segment.fmax + 1)
-                    }
-                    fastaSequence += "|"
+            for (JSONObject jsonObject : transformedJsonArray) {
+                println "jsonObject: ${jsonObject.toString()}"
+                if (jsonObject.type == REFERENCE) {
+                    fastaSequence += '<START_OF_REF>'
+                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
+                    fastaSequence += '<END_OF_REF>'
                 }
-                else if (segment.type == "inversion") {
-                    log.debug "[Y] Fetching for ${segment.fmin + 1} ${segment.fmax}"
-                    String sequenceString = fastaFileService.readIndexedFastaRegion(segment.source, segment.source_contig, segment.fmin + 1, segment.fmax)
-                    fastaSequence += sequenceString.reverse()
-                    fastaSequence += '|'
+                else if (jsonObject.type == AlternativeLociService.TYPE_INVERSION.toLowerCase()) {
+                    fastaSequence += '<START_INV>'
+                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
+                    fastaSequence += '<END_INV>'
+                    descriptionArray.add("${jsonObject.name} (${jsonObject.type})")
                 }
-                else if (segment.type == "correction") {
-                    // calling readIndexedFasta because the correction assumes that the entire sequence will be used
-                    if (segment.orientation == "REVERSE") {
-                        fastaSequence += reverseComplementSequence(fastaFileService.readIndexedFasta(segment.source, segment.source_contig))
-                    }
-                    else {
-                        fastaSequence += fastaFileService.readIndexedFasta(segment.source, segment.source_contig)
-                    }
-                    fastaSequence += '|'
+                else if (jsonObject.type == AlternativeLociService.TYPE_DELETION.toLowerCase()) {
+                    fastaSequence += "<DEL>"
+                    descriptionArray.add("${jsonObject.name} (${jsonObject.type})")
+                }
+                else if (jsonObject.type == AlternativeLociService.TYPE_INSERTION.toLowerCase()) {
+                    fastaSequence += "<START_INS>"
+                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
+                    fastaSequence += "<END_INS>"
+                    descriptionArray.add("${jsonObject.name} (${jsonObject.type})")
+                }
+                else if (jsonObject.type == AlternativeLociService.TYPE_CORRECTION.toLowerCase()) {
+                    fastaSequence += '<START_CORRECTION>'
+                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
+                    fastaSequence += '<END_CORRECTION>'
+                    descriptionArray.add("${jsonObject.name} (${jsonObject.type})")
                 }
             }
 
-            transformedFastaMap[sequenceName] = [sequence: fastaSequence, comment: "TRANSFORMED"]
+            // TODO: instead of storing in map, write to a file to have a smaller memory footprint and provide file for download
+            // Expire the file in 120 seconds to clear disk storage
+
+            long end = System.currentTimeMillis()
+            log.debug "time taken to generate transformationArray: ${end - start} ms"
+            transformedFastaMap[sequenceName] = [name: name, description: descriptionArray, sequence: fastaSequence]
         }
 
         return transformedFastaMap
     }
 
-
-    // TODO: Make use of SequenceTranslationHandler; not sure why its not accessible
-    /** Reverse complement a nucleotide sequence.
-     *
-     * @param sequence - String for the nucleotide sequence to be reverse complemented
-     * @return Reverse complemented nucleotide sequence
-     */
-    public static String reverseComplementSequence(String sequence) {
-        StringBuilder buffer = new StringBuilder(sequence);
-        buffer.reverse();
-        for (int i = 0; i < buffer.length(); ++i) {
-            switch (buffer.charAt(i)) {
-                case 'A':
-                    buffer.setCharAt(i, 'T' as char);
-                    break;
-                case 'C':
-                    buffer.setCharAt(i, 'G' as char);
-                    break;
-                case 'G':
-                    buffer.setCharAt(i, 'C' as char);
-                    break;
-                case 'T':
-                    buffer.setCharAt(i, 'A' as char);
-                    break;
-            }
-        }
-        return buffer.toString();
-    }
 }

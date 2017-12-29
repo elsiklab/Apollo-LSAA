@@ -1,36 +1,30 @@
 package org.elsiklab
 
-import grails.transaction.Transactional
 import htsjdk.samtools.reference.IndexedFastaSequenceFile
 import htsjdk.samtools.reference.FastaSequenceIndex
 import htsjdk.samtools.reference.FastaSequenceIndexCreator
-import org.biojava.nbio.core.sequence.DNASequence
+import htsjdk.samtools.util.SequenceUtil
+import htsjdk.samtools.reference.ReferenceSequence
 
-@Transactional
+import java.io.FileNotFoundException
+import java.nio.file.Path
+import java.nio.file.Paths
+
 class FastaFileService {
 
-    def serviceMethod() {
-    }
+    public static final String FAI_SUFFIX = ".fai"
 
-    def readIndexedFasta(String file, String contig) {
-        def indexedFasta = new IndexedFastaSequenceFile(new File(file))
-        def ret = indexedFasta.getSequence(contig)
-        return new String(ret.getBases()).trim()
-    }
-
-    def readIndexedFastaRegion(String file, String contig, Integer start, Integer end) {
-        def indexedFasta
-        try {
-            indexedFasta = new IndexedFastaSequenceFile(new File(file))
-        }
-        catch(Exception e) {
-            log.debug "Index not found for: ${file}; generating one..."
-            generateFastaIndex(file)
-            indexedFasta = new IndexedFastaSequenceFile(new File(file))
-        }
-        def ret = indexedFasta.getSubsequenceAt(contig, start, end)
-        log.debug "return seq size: ${new String(ret.getBases()).trim().length()}"
-        return new String(ret.getBases()).trim()
+    /**
+     * Generate Fasta Index for a given FASTA file
+     * @param fileName
+     * @return
+     */
+    def generateFastaIndex(String fileName) {
+        log.debug "fileName: ${fileName}"
+        Path filePath = Paths.get(fileName)
+        FastaSequenceIndex index = FastaSequenceIndexCreator.buildFromFasta(filePath)
+        log.debug "index created"
+        return index
     }
 
     /**
@@ -38,22 +32,65 @@ class FastaFileService {
      * @param fileName
      * @return
      */
-    def generateFastaIndex(String fileName) {
-        FastaSequenceIndex index = FastaSequenceIndexCreator.buildFromFasta(new File(fileName).toPath())
-        return index
+    def generateFastaIndexFile(String fileName) {
+        Path filePath = Paths.get(fileName)
+        FastaSequenceIndexCreator.create(filePath, true)
     }
 
-    def readIndexedFastaReverse(String file, String contig) {
-        def str = this.readIndexedFasta(file, contig)
-        return new DNASequence(str).getReverseComplement().getSequenceAsString()
+    /**
+     * Read an indexed FASTA and fetch the sequence for a given sequence name
+     * @param fastaFile
+     * @param sequenceName
+     * @return
+     */
+    def readIndexedFasta(String fastaFile, String sequenceName, boolean reverse = false) {
+        log.debug "fastaFile: ${fastaFile} sequenceName: ${sequenceName}"
+        def indexedFasta
+        try {
+            indexedFasta = new IndexedFastaSequenceFile(new File(fastaFile))
+        }
+        catch(FileNotFoundException e) {
+            log.debug "Index not found for: ${fastaFile}; generating one..."
+            def fastaIndex = generateFastaIndex(fastaFile)
+            indexedFasta = new IndexedFastaSequenceFile(new File(fastaFile), fastaIndex)
+        }
+        ReferenceSequence sequence = indexedFasta.getSequence(sequenceName)
+        String returnSequence = sequence.getBaseString()
+        if (reverse) {
+            returnSequence = SequenceUtil.reverseComplement(returnSequence)
+        }
+
+        log.debug "return sequence size: ${returnSequence.length()}"
+        return returnSequence
     }
 
-    def readIndexedFastaRegionReverse(String file, String contig, Integer start, Integer end) {
-        def str = this.readIndexedFastaRegion(file, contig, start, end)
-        return new DNASequence(str).getReverseComplement().getSequenceAsString()
+    /**
+     *
+     * @param fastaFile
+     * @param sequenceName
+     * @param start zero-based
+     * @param end zero-based
+     * @return
+     */
+    def readIndexedFastaRegion(String fastaFile, String sequenceName, Integer start, Integer end, boolean reverse = false) {
+        println "fastaFile: ${fastaFile} ${sequenceName}:${start}-${end}"
+        def indexedFasta
+        try {
+            indexedFasta = new IndexedFastaSequenceFile(new File(fastaFile))
+        }
+        catch(FileNotFoundException e) {
+            log.debug "Index not found for: ${fastaFile}; generating one..."
+            def fastaIndex = generateFastaIndex(fastaFile)
+            indexedFasta = new IndexedFastaSequenceFile(new File(fastaFile), fastaIndex)
+        }
+        // Note: start and end are expected to be 1-based
+        ReferenceSequence sequence = indexedFasta.getSubsequenceAt(sequenceName, start + 1, end)
+        String returnSequence = sequence.getBaseString().trim()
+        if(reverse) {
+            returnSequence = SequenceUtil.reverseComplement(returnSequence)
+        }
+        log.debug "return sequence size: ${returnSequence.length()}"
+        return returnSequence
     }
 
-    def readSequence(String file, String contig, Integer start, Integer end, Boolean reverse) {
-        return reverse ? this.readIndexedFastaRegionReverse(file, contig, start, end) : this.readIndexedFastaRegion(file, contig, start, end)
-    }
 }

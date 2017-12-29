@@ -14,6 +14,12 @@ class AlternativeLociService {
 
     def grailsApplication
     def featureService
+    def fastaFileService
+
+    public static final String TYPE_CORRECTION = "CORRECTION"
+    public static final String TYPE_INVERSION = "INVERSION"
+    public static final String TYPE_INSERTION = "INSERTION"
+    public static final String TYPE_DELETION = "DELETION"
 
     /**
      *
@@ -25,7 +31,6 @@ class AlternativeLociService {
     def createCorrection(JSONObject jsonObject, Organism organism, Sequence sequence) {
         log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
-        String type = "CORRECTION"
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
         int orientation = Integer.parseInt(jsonObject.orientation)
@@ -42,8 +47,9 @@ class AlternativeLociService {
         String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
         def file = new File(fastaFileName)
         // TODO: a better way to write this file and move this to a method
-        file << ">${name} ${type} ${sequenceName} ${organism.id}\n"
-        file << jsonObject.sequence_data
+        file << ">${name} ${TYPE_CORRECTION} ${sequenceName} ${organism.id}\n"
+        file << jsonObject.sequenceData
+        fastaFileService.generateFastaIndexFile(fastaFileName)
 
         FastaFile fastaFile = new FastaFile(
                 sequenceName: name, // the fasta sequence name
@@ -57,11 +63,11 @@ class AlternativeLociService {
         // Corrections will always default their startPosition to 0 and endPosition to len(sequence) - 1
         AlternativeLoci alternativeLoci = new AlternativeLoci(
                 name: fastaFilePrefix + '-alt',
-                type: type,
+                type: TYPE_CORRECTION,
                 uniqueName: name,
                 description: description,
                 startPosition: 0,
-                endPosition: jsonObject.sequence_data.length() - 1,
+                endPosition: jsonObject.sequenceData.length() - 1,
                 orientation: orientation,
                 fastaFile: fastaFile
         ).save(flush: true)
@@ -88,7 +94,6 @@ class AlternativeLociService {
     def createInversion(JSONObject jsonObject, Organism organism, Sequence sequence) {
         log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
-        String type = "INVERSION"
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
         int start = Integer.parseInt(jsonObject.start)
@@ -103,7 +108,7 @@ class AlternativeLociService {
         // Instead, we will keep track of what part of the genome is involved in the inversion
         AlternativeLoci alternativeLoci = new AlternativeLoci(
                 name: name,
-                type: type,
+                type: TYPE_INVERSION,
                 uniqueName: name,
                 description: description,
                 startPosition: start,
@@ -134,7 +139,6 @@ class AlternativeLociService {
     def createInsertion(JSONObject jsonObject, Organism organism, Sequence sequence) {
         log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
-        String type = "INSERTION"
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
         int orientation = Integer.parseInt(jsonObject.orientation)
@@ -144,15 +148,15 @@ class AlternativeLociService {
             // bringing the positions to internal zero-based
             start -= 1
         }
-        int end = start + 1
 
         log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
         String fastaFilePrefix = "${organism.id}-${sequenceName}-${name}"
         String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
         def file = new File(fastaFileName)
         // TODO: a better way to write this file and move this to a method
-        file << ">${name} ${type} ${sequenceName} ${organism.id}\n"
-        file << jsonObject.sequence_data
+        file << ">${name} ${TYPE_INSERTION} ${sequenceName} ${organism.id}\n"
+        file << jsonObject.sequenceData
+        fastaFileService.generateFastaIndexFile(fastaFileName)
 
         FastaFile fastaFile = new FastaFile(
                 sequenceName: name, // the fasta sequence name
@@ -166,19 +170,19 @@ class AlternativeLociService {
         // Insertion will always default their startPosition to 0 and endPosition to len(sequence) - 1
         AlternativeLoci alternativeLoci = new AlternativeLoci(
                 name: fastaFilePrefix + '-alt',
-                type: type,
+                type: TYPE_INSERTION,
                 uniqueName: name,
                 description: description,
                 startPosition: 0,
-                endPosition: jsonObject.sequence_data.length() - 1,
+                endPosition: jsonObject.sequenceData.length() - 1,
                 orientation: orientation,
                 fastaFile: fastaFile
         ).save(flush: true)
 
-        // Insertion fmin and fmax will always be next to each other (i.e. fmax - fmin will always be 1)
+        // Insertion fmin and fmax will always be the same (i.e. fmax - fmin will be 0)
         FeatureLocation featureLocation = new FeatureLocation(
                 fmin: start,
-                fmax: end,
+                fmax: start,
                 strand: 1,
                 feature: alternativeLoci,
                 sequence: sequence
@@ -198,7 +202,6 @@ class AlternativeLociService {
     def createDeletion(JSONObject jsonObject, Organism organism, Sequence sequence) {
         log.debug "${jsonObject.toString()}"
         String name = UUID.randomUUID()
-        String type = "DELETION"
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
         int start = Integer.parseInt(jsonObject.start)
@@ -213,7 +216,7 @@ class AlternativeLociService {
         // Instead, we will keep track of what part of the genome is involved in the deletion.
         AlternativeLoci alternativeLoci = new AlternativeLoci(
                 name: name,
-                type: type,
+                type: TYPE_DELETION,
                 uniqueName: name,
                 description: description,
                 startPosition: start,

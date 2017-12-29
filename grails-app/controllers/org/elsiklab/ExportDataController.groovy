@@ -23,7 +23,7 @@ class ExportDataController {
      */
     def export() {
         if(params.type == 'JSON') {
-            getTransformedJSON()
+            getTransformedJson()
         }
         else if(params.type == 'FASTA') {
             getTransformedFasta()
@@ -37,19 +37,18 @@ class ExportDataController {
      *
      * @return
      */
-    def getTransformedJSON() {
-        log.debug "${params.toString()}"
-        def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
+    def getTransformedJson() {
+        log.debug "params: ${params.toString()}"
+        def organism = Organism.findByCommonName(params.organism) ?: Organism.findById(params.organism)
         if (organism) {
-            def transformedJsonObject = exportDataService.getTransformationAsJSON(organism)
-
-            response.contentType = 'application/json'
+            def transformedJsonObject = exportDataService.getTransformationAsJson(organism)
+            response.contentType = 'text/plain'
             if(params.download == 'download') {
-                response.setHeader 'Content-disposition', 'attachment;filename=output.json'
+                response.setHeader ('Content-disposition', 'attachment;filename=output.json')
             }
-            def json = transformedJsonObject as JSON
-            json.prettyPrint = true
-            render text: json
+            def responseJson = transformedJsonObject as JSON
+            responseJson.prettyPrint = true
+            render text: responseJson
         }
         else {
             render ([error: "Organism not found"] as JSON)
@@ -61,19 +60,18 @@ class ExportDataController {
      * @return
      */
     def getTransformedFasta() {
-        log.debug "${params.toString()}"
-        def organism = Organism.findByCommonName(params.organism)?:Organism.findById(params.organism)
+        log.debug "params: ${params.toString()}"
+        def organism = Organism.findByCommonName(params.organism) ?: Organism.findById(params.organism)
         if (organism) {
-            def transformedFastaMap = exportDataService.getTransformationAsFASTA(organism)
-
-            response.contentType = 'application/json'
+            def transformedFastaMap = exportDataService.getTransformationAsFasta(organism)
+            response.contentType = 'text/plain'
             if (params.download == 'download') {
-                response.setHeader 'Content-disposition', 'attachment;filename=output.fasta'
+                response.setHeader('Content-disposition', 'attachment;filename=output.fasta')
             }
 
             String responseData = ""
             for (String key : transformedFastaMap.keySet()) {
-                responseData += '>' + key + '-LSAA' + ' ' + transformedFastaMap[key]["comment"] + '\n' + transformedFastaMap[key]["sequence"] + '\n'
+                responseData += ">${transformedFastaMap[key]["name"]} ${transformedFastaMap[key]["description"]}\n${transformedFastaMap[key]["sequence"]}\n"
             }
 
             render text: responseData
