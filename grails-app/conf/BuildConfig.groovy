@@ -25,6 +25,9 @@ grails.project.dependency.resolution = {
         mavenCentral()
     }
     dependencies {
+        // HTSJDK
+        compile group: 'com.github.samtools', name: 'htsjdk', version: '2.10.0'
+
         compile group: 'org.jyaml', name: 'jyaml', version: '1.3'
         compile group: 'commons-io', name: 'commons-io', version: '2.5'
         compile group: 'com.h2database', name: 'h2', version: '1.4.192'
