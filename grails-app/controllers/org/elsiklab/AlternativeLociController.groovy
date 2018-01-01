@@ -242,10 +242,15 @@ class AlternativeLociController {
             if (alternativeLociService.hasPermissions(requestObject, organism)) {
                 Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
                 if (sequence) {
-                    def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
-                    User user = alternativeLociService.getCurrentUser(requestObject)
-                    featureService.setOwner(alternativeLoci, user)
-                    render ([success: true] as JSON)
+                    if (!alternativeLociService.checkForOverlappingAlternativeLoci(requestObject)) {
+                        def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
+                        User user = alternativeLociService.getCurrentUser(requestObject)
+                        featureService.setOwner(alternativeLoci, user)
+                        render ([success: true] as JSON)
+                    }
+                    else {
+                        render text: ([error: 'Cannot create overlapping Alternative Loci'] as JSON), status: 500
+                    }
                 }
                 else {
                     render text: ([error: 'No sequence found'] as JSON), status: 500

@@ -250,6 +250,12 @@ class AlternativeLociService {
         return alternativeLoci
     }
 
+    /**
+     *
+     * @param organism
+     * @param sequenceName
+     * @return
+     */
     def getSequence(Organism organism, String sequenceName) {
         Sequence sequence = null
         def results = Sequence.executeQuery(
@@ -269,6 +275,35 @@ class AlternativeLociService {
         }
         log.debug "Sequence is: ${sequence}"
         return sequence
+    }
+
+    /**
+     *
+     * @param jsonObject
+     * @return
+     */
+    def checkForOverlappingAlternativeLoci(JSONObject jsonObject) {
+        String sequenceName = jsonObject.sequence
+        int start, end
+        if (jsonObject.has("start")) {
+            start = jsonObject.getInt("start") - 1
+        }
+        else {
+            start = jsonObject.getInt("position") - 1
+        }
+        if (jsonObject.has("end")) {
+            end = jsonObject.getInt("end")
+        }
+        else {
+            end = jsonObject.getInt("position") - 1
+        }
+
+        def overlappingAlternativeLoci = AlternativeLoci.executeQuery(
+                "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
+                [querySequence: sequenceName, queryFmin: start, queryFmax: end]
+        )
+
+        return overlappingAlternativeLoci.size() != 0
     }
 
     /**
