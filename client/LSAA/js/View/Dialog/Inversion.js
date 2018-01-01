@@ -43,26 +43,36 @@ define([
                 new Button({
                     label: 'OK',
                     onClick: function() {
-                        request(thisB.contextPath + '/../alternativeLoci/createInversion', {
-                            data: {
-                                start: thisB.start.get('value'),
-                                end: thisB.end.get('value'),
-                                coordinateFormat: "one_based",
-                                sequence: thisB.sequence.get('value'),
-                                description: thisB.description.get('value'),
-                                organism: thisB.browser.config.dataset_id,
-                                username: thisB.user.email
-                            },
-                            handleAs: 'json',
-                            method: 'post'
-                        }).then(function() {
-                            thisB.hide();
-                            thisB.browser.clearHighlight();
-                            thisB.browser.view.redrawTracks();
-                        }, function(error) {
-                            thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
-                            console.error(error);
-                        });
+                        var valid = true;
+                        var start = thisB.start.get('value');
+                        var end = thisB.end.get('value');
+                        if (start > end) {
+                            valid = false;
+                            window.alert("Error: Inversion Start greater than End");
+                        }
+
+                        if (valid) {
+                            request(thisB.contextPath + '/../alternativeLoci/createInversion', {
+                                data: {
+                                    start: start,
+                                    end: end,
+                                    coordinateFormat: "one_based",
+                                    sequence: thisB.sequence.get('value'),
+                                    description: thisB.description.get('value'),
+                                    organism: thisB.browser.config.dataset_id,
+                                    username: thisB.user.email
+                                },
+                                handleAs: 'json',
+                                method: 'post'
+                            }).then(function() {
+                                thisB.hide();
+                                thisB.browser.clearHighlight();
+                                thisB.browser.view.redrawTracks();
+                            }, function(error) {
+                                thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
+                                console.error(error);
+                            });
+                        }
                     }
                 }).placeAt(actionBar);
 

@@ -48,27 +48,35 @@ define([
                 new Button({
                     label: 'OK',
                     onClick: function() {
-                        request(thisB.contextPath + '/../alternativeLoci/createInsertion', {
-                            data: {
-                                position: thisB.lsaaPosition.get('value'),
-                                coordinateFormat: "one_based",
-                                sequence: thisB.sequence.get('value'),
-                                description: thisB.description.get('value'),
-                                orientation: thisB.orientation.get('value'),
-                                sequenceData: thisB.sequencedata.value,
-                                organism: thisB.browser.config.dataset_id,
-                                username: thisB.user.email
-                            },
-                            handleAs: 'json',
-                            method: 'post'
-                        }).then(function() {
-                            thisB.hide();
-                            thisB.browser.clearHighlight();
-                            thisB.browser.view.redrawTracks();
-                        }, function(error) {
-                            thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
-                            console.error(error);
-                        });
+                        var valid = true;
+                        if (thisB.sequencedata.value.length === 0) {
+                            valid = false;
+                            window.alert("Error: Sequence data cannot be empty");
+                        }
+
+                        if (valid) {
+                            request(thisB.contextPath + '/../alternativeLoci/createInsertion', {
+                                data: {
+                                    position: thisB.lsaaPosition.get('value'),
+                                    coordinateFormat: "one_based",
+                                    sequence: thisB.sequence.get('value'),
+                                    description: thisB.description.get('value'),
+                                    orientation: thisB.orientation.get('value'),
+                                    sequenceData: thisB.sequencedata.value,
+                                    organism: thisB.browser.config.dataset_id,
+                                    username: thisB.user.email
+                                },
+                                handleAs: 'json',
+                                method: 'post'
+                            }).then(function() {
+                                thisB.hide();
+                                thisB.browser.clearHighlight();
+                                thisB.browser.view.redrawTracks();
+                            }, function(error) {
+                                thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
+                                console.error(error);
+                            });
+                        }
                     }
                 }).placeAt(actionBar);
 
