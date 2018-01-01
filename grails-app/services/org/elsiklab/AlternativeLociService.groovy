@@ -1,6 +1,11 @@
 package org.elsiklab
 
 import org.bbop.apollo.Feature
+import org.bbop.apollo.User
+import org.bbop.apollo.UserGroup
+import org.bbop.apollo.GroupOrganismPermission
+import org.bbop.apollo.Role
+import org.bbop.apollo.UserOrganismPermission
 import org.codehaus.groovy.grails.web.json.JSONObject
 import grails.converters.JSON
 import grails.transaction.Transactional
@@ -9,12 +14,20 @@ import org.bbop.apollo.Sequence
 import org.bbop.apollo.BiologicalRegion
 import org.bbop.apollo.Organism
 
+import org.apache.shiro.SecurityUtils
+
+import org.elsiklab.PermissionEnum
+import org.elsiklab.FeatureStringEnum
+
 @Transactional
 class AlternativeLociService {
 
     def grailsApplication
     def featureService
+    def preferenceService
+
     def fastaFileService
+
 
     public static final String TYPE_CORRECTION = "CORRECTION"
     public static final String TYPE_INVERSION = "INVERSION"
@@ -256,5 +269,84 @@ class AlternativeLociService {
         }
         log.debug "Sequence is: ${sequence}"
         return sequence
+    }
+
+    /**
+     *
+     * @param jsonObject
+     * @param organism
+     * @return
+     */
+    Boolean hasPermissions(JSONObject jsonObject, Organism organism) {
+        User user = getCurrentUser(jsonObject)
+        log.debug "checking if user: ${user.username} is ADMIN"
+        // check if user is admin
+        if (isUserAdmin(user)) {
+            log.debug "user is ADMIN"
+            return true
+        }
+        // check if user is part of a group that has ADMIN or WRITE permission on the organism
+        log.debug "checking group-level permissions for user: ${user.username}"
+        def groupOrganismPermissions = GroupOrganismPermission.findAllByOrganism(organism)
+        for(int i = 0; i < groupOrganismPermissions.size(); i++) {
+            def groupOrganismPermission = groupOrganismPermissions.get(i)
+            if (user in groupOrganismPermission.group.users) {
+                log.debug "user: ${user.username} is part of group: ${groupOrganismPermission.group.name}"
+                if (groupOrganismPermission.permissions.contains("WRITE") || groupOrganismPermission.permissions.contains("ADMIN")) {
+                    log.debug "group: ${groupOrganismPermission.group.name} has WRITE/ADMIN permissions"
+                    return true
+                }
+            }
+        }
+
+        // check if user itself has ADMIN or WRITE permission on the organism
+        log.debug "checking user-level permissions for user: ${user.username}"
+        def userOrganismPermission = UserOrganismPermission.findByUserAndOrganism(user, organism)
+        if (userOrganismPermission.permissions.contains("WRITE") || userOrganismPermission.permissions.contains("ADMIN")) {
+            log.debug "user: ${user.username} has WRITE/ADMIN permissions"
+            return true
+        }
+
+        log.debug "user does not have WRITE/ADMIN permissions"
+        return false
+    }
+
+    /**
+     *
+     * @param inputObject
+     * @return
+     */
+    User getCurrentUser(JSONObject inputObject = new JSONObject()) {
+        String username = null
+        if (inputObject?.has(FeatureStringEnum.USERNAME.value)) {
+            username = inputObject.getString(FeatureStringEnum.USERNAME.value)
+        }
+        if (!username) {
+            username = SecurityUtils.subject.principal
+            println"username from Shiro: ${username}"
+        }
+        if (!username) {
+            return null
+        }
+
+        User user = User.findByUsername(username)
+        return user
+    }
+
+    /**
+     *
+     * @param user
+     * @return
+     */
+    boolean isUserAdmin(User user) {
+        if (user != null) {
+            for (Role role in user.roles) {
+                if (role.name == "ADMIN") {
+                    return true
+                }
+            }
+        }
+
+        return false
     }
 }

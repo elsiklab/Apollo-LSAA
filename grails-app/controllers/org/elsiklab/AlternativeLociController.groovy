@@ -236,20 +236,23 @@ class AlternativeLociController {
     def createCorrection() {
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
-        // TODO: this is a crude way of dealing with username
-        String username = params.username
-        User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
         log.debug "Organism: ${organism}"
         if (organism) {
-            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
-            if (sequence) {
-                def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
-                featureService.setOwner(alternativeLoci, user)
-                render ([success: true] as JSON)
+            if (alternativeLociService.hasPermissions(requestObject, organism)) {
+                Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+                if (sequence) {
+                    def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
+                    User user = alternativeLociService.getCurrentUser(requestObject)
+                    featureService.setOwner(alternativeLoci, user)
+                    render ([success: true] as JSON)
+                }
+                else {
+                    render text: ([error: 'No sequence found'] as JSON), status: 500
+                }
             }
             else {
-                render text: ([error: 'No sequence found'] as JSON), status: 500
+                render text: ([error: 'User does not have sufficient permissions'] as JSON), status: 500
             }
         }
         else {
@@ -260,20 +263,23 @@ class AlternativeLociController {
     def createInversion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
-        // TODO: this is a crude way of dealing with username
-        String username = params.username
-        User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
         log.debug "Organism: ${organism}"
         if (organism) {
-            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
-            if (sequence) {
-                def alternativeLoci = alternativeLociService.createInversion(requestObject, organism, sequence)
-                featureService.setOwner(alternativeLoci, user)
-                render ([success: true] as JSON)
+            if (alternativeLociService.hasPermissions(requestObject, organism)) {
+                Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+                if (sequence) {
+                    def alternativeLoci = alternativeLociService.createInversion(requestObject, organism, sequence)
+                    User user = alternativeLociService.getCurrentUser(requestObject)
+                    featureService.setOwner(alternativeLoci, user)
+                    render ([success: true] as JSON)
+                }
+                else {
+                    render text: ([error: 'No sequence found'] as JSON), status: 500
+                }
             }
             else {
-                render text: ([error: 'No sequence found'] as JSON), status: 500
+                render text: ([error: 'User does not have sufficient permissions'] as JSON), status: 500
             }
         }
         else {
@@ -284,21 +290,25 @@ class AlternativeLociController {
     def createInsertion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
-        // TODO: this is a crude way of dealing with username
-        String username = params.username
-        User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
         log.debug "Organism: ${organism}"
         if (organism) {
-            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
-            if (sequence) {
-                def alternativeLoci = alternativeLociService.createInsertion(requestObject, organism, sequence)
-                featureService.setOwner(alternativeLoci, user)
-                render ([success: true] as JSON)
+            if (alternativeLociService.hasPermissions(requestObject, organism)) {
+                Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+                if (sequence) {
+                    def alternativeLoci = alternativeLociService.createInsertion(requestObject, organism, sequence)
+                    User user = alternativeLociService.getCurrentUser(requestObject)
+                    featureService.setOwner(alternativeLoci, user)
+                    render ([success: true] as JSON)
+                }
+                else {
+                    render text: ([error: 'No sequence found'] as JSON), status: 500
+                }
             }
             else {
-                render text: ([error: 'No sequence found'] as JSON), status: 500
+                render text: ([error: 'User does not have sufficient permissions'] as JSON), status: 500
             }
+
         }
         else {
             render text: ([error: 'No organism found'] as JSON), status: 500
@@ -308,20 +318,23 @@ class AlternativeLociController {
     def createDeletion() {
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
-        // TODO: this is a crude way of dealing with username
-        String username = params.username
-        User user = User.findByUsername(username)
         Organism organism = Organism.findById(params.organism)
         log.debug "Organism: ${organism}"
         if (organism) {
-            Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
-            if (sequence) {
-                def alternativeLoci = alternativeLociService.createDeletion(requestObject, organism, sequence)
-                featureService.setOwner(alternativeLoci, user)
-                render ([success: true] as JSON)
+            if (alternativeLociService.hasPermissions(requestObject, organism)) {
+                Sequence sequence = alternativeLociService.getSequence(organism, requestObject.sequence)
+                if (sequence) {
+                    def alternativeLoci = alternativeLociService.createDeletion(requestObject, organism, sequence)
+                    User user = alternativeLociService.getCurrentUser(requestObject)
+                    featureService.setOwner(alternativeLoci, user)
+                    render ([success: true] as JSON)
+                }
+                else {
+                    render text: ([error: 'No sequence found'] as JSON), status: 500
+                }
             }
             else {
-                render text: ([error: 'No sequence found'] as JSON), status: 500
+                render text: ([error: 'User does not have sufficient permissions'] as JSON), status: 500
             }
         }
         else {
