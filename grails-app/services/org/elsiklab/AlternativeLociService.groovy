@@ -6,6 +6,7 @@ import org.bbop.apollo.UserGroup
 import org.bbop.apollo.GroupOrganismPermission
 import org.bbop.apollo.Role
 import org.bbop.apollo.UserOrganismPermission
+import org.codehaus.groovy.grails.web.json.JSONArray
 import org.codehaus.groovy.grails.web.json.JSONObject
 import grails.converters.JSON
 import grails.transaction.Transactional
@@ -25,7 +26,7 @@ class AlternativeLociService {
     def grailsApplication
     def featureService
     def preferenceService
-
+    def requestHandlingService
     def fastaFileService
 
 
@@ -94,6 +95,10 @@ class AlternativeLociService {
         ).save(flush: true)
         alternativeLoci.addToFeatureLocations(featureLocation)
 
+        if (jsonObject.has("breed")) {
+            addBreedTermToAlternativeLoci(alternativeLoci, jsonObject.get("breed"))
+        }
+
         return alternativeLoci
     }
 
@@ -138,6 +143,10 @@ class AlternativeLociService {
                 sequence: sequence
         ).save(flush: true)
         alternativeLoci.addToFeatureLocations(featureLocation)
+
+        if (jsonObject.has("breed")) {
+            addBreedTermToAlternativeLoci(alternativeLoci, jsonObject.get("breed"))
+        }
 
         return alternativeLoci
     }
@@ -202,6 +211,10 @@ class AlternativeLociService {
         ).save(flush: true)
         alternativeLoci.addToFeatureLocations(featureLocation)
 
+        if (jsonObject.has("breed")) {
+            addBreedTermToAlternativeLoci(alternativeLoci, jsonObject.get("breed"))
+        }
+
         return alternativeLoci
     }
 
@@ -247,6 +260,10 @@ class AlternativeLociService {
         ).save(flush: true)
         alternativeLoci.addToFeatureLocations(featureLocation)
 
+        if (jsonObject.has("breed")) {
+            addBreedTermToAlternativeLoci(alternativeLoci, jsonObject.get("breed"))
+        }
+
         return alternativeLoci
     }
 
@@ -275,6 +292,19 @@ class AlternativeLociService {
         }
         log.debug "Sequence is: ${sequence}"
         return sequence
+    }
+
+    /**
+     *
+     * @param alternativeLoci
+     * @param breedString
+     * @return
+     */
+    def addBreedTermToAlternativeLoci(AlternativeLoci alternativeLoci, String breedString) {
+        log.debug "altLoci: ${alternativeLoci.uniqueName} with breedString: ${breedString}"
+        def breedArray = breedString.split("\\|")
+        def lboIdentifierPair = breedArray[0].split(":")
+        featureService.addNonPrimaryDbxrefs(alternativeLoci, lboIdentifierPair[0], lboIdentifierPair[1])
     }
 
     /**

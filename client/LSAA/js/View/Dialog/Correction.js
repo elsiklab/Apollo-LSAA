@@ -46,40 +46,136 @@ define([
                     label: 'OK',
                     onClick: function() {
                         var valid = true;
-                        var start = thisB.start.get('value');
-                        var end = thisB.end.get('value');
-                        if (thisB.sequencedata.value.length === 0) {
-                            valid = false;
-                            window.alert("Error: Sequence data cannot be empty");
-                        }
-                        if (start > end) {
-                            valid = false;
-                            window.alert("Error: Correction Start greater than End");
-                        }
+                        var breed = thisB.breed.get('value');
+                        var urlTemplate1 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
+                        var urlTemplate2 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
+                        var queryUrl;
 
-                        if (valid) {
-                            request(thisB.contextPath + '/../alternativeLoci/createCorrection', {
-                                data: {
-                                    start: start,
-                                    end: end,
-                                    coordinateFormat: "one_based",
-                                    sequence: thisB.sequence.get('value'),
-                                    description: thisB.description.get('value'),
-                                    orientation: thisB.orientation.get('value'),
-                                    sequenceData: thisB.sequencedata.value,
-                                    organism: thisB.browser.config.dataset_id,
-                                    username: thisB.user.email
-                                },
-                                handleAs: 'json',
-                                method: 'post'
-                            }).then(function() {
-                                thisB.hide();
-                                thisB.browser.clearHighlight();
-                                thisB.browser.view.redrawTracks();
+                        if (breed.length != 0) {
+                            if (breed.startsWith("LBO:")) {
+                                queryUrl = urlTemplate1.replace('%IDENTIFIER%', breed);
+                            }
+                            else {
+                                queryUrl = urlTemplate2.replace('%NAME%', breed);
+                            }
+
+                            request(queryUrl,
+                                {
+                                    data: {},
+                                    handleAs: 'json',
+                                    method: 'get'
+                                }).then(function(response) {
+                                console.log("Results: ", response);
+                                if (response.statusCode === 200) {
+                                    if (response.results.length === 0) {
+                                        // no match
+                                        var message = "Could not verify Breed.\nPlease use a proper Livestock Breed Ontology (LBO) term (Ex. 'LBO:0000017' or 'Angus').";
+                                        console.log(message);
+                                        thisB.error.innerHTML = '<br>' + message + '<br>';
+                                        valid = false;
+                                    }
+                                    else if (response.results.length === 1) {
+                                        // exact match
+                                        var message = "Found one LBOTerm for '" + breed + "'.";
+                                        breed = response.results[0];
+                                        console.log(message);
+                                        thisB.error.innerHTML = '';
+                                        valid = true;
+                                    }
+                                    else {
+                                        // ambiguous match
+                                        var message = "Found more than one LBO term for '" + breed + "'.\nPlease use one of the following LBO term identifiers instead: ";
+                                        for (var i = 0; i < response.results.length; i++) {
+                                            if (i !== 0) message += ', ';
+                                            message += response.results[i][0]
+                                        }
+                                        console.log(message);
+                                        thisB.error.innerHTML = '<br>' + message + '<br>';
+                                        valid = false;
+                                    }
+                                }
+                                else {
+                                    console.log("Could not query BovineMine for validating Breed against known Livestock Breed Ontology (LBO) terms.");
+                                }
+
+                                var start = thisB.start.get('value');
+                                var end = thisB.end.get('value');
+                                if (thisB.sequencedata.value.length === 0) {
+                                    valid = false;
+                                    window.alert("Error: Sequence data cannot be empty");
+                                }
+                                if (start > end) {
+                                    valid = false;
+                                    window.alert("Error: Correction Start greater than End");
+                                }
+
+                                if (valid) {
+                                    request(thisB.contextPath + '/../alternativeLoci/createCorrection', {
+                                        data: {
+                                            start: start,
+                                            end: end,
+                                            coordinateFormat: "one_based",
+                                            sequence: thisB.sequence.get('value'),
+                                            description: thisB.description.get('value'),
+                                            breed: breed.join('|'),
+                                            orientation: thisB.orientation.get('value'),
+                                            sequenceData: thisB.sequencedata.value,
+                                            organism: thisB.browser.config.dataset_id,
+                                            username: thisB.user.email
+                                        },
+                                        handleAs: 'json',
+                                        method: 'post'
+                                    }).then(function() {
+                                        thisB.hide();
+                                        thisB.browser.clearHighlight();
+                                        thisB.browser.view.redrawTracks();
+                                    }, function(error) {
+                                        thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
+                                        console.error(error);
+                                    });
+                                }
+
                             }, function(error) {
                                 thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
-                                console.error(error);
+                                console.log(error);
                             });
+                        }
+                        else {
+                            var start = thisB.start.get('value');
+                            var end = thisB.end.get('value');
+                            if (thisB.sequencedata.value.length === 0) {
+                                valid = false;
+                                window.alert("Error: Sequence data cannot be empty");
+                            }
+                            if (start > end) {
+                                valid = false;
+                                window.alert("Error: Correction Start greater than End");
+                            }
+
+                            if (valid) {
+                                request(thisB.contextPath + '/../alternativeLoci/createCorrection', {
+                                    data: {
+                                        start: start,
+                                        end: end,
+                                        coordinateFormat: "one_based",
+                                        sequence: thisB.sequence.get('value'),
+                                        description: thisB.description.get('value'),
+                                        orientation: thisB.orientation.get('value'),
+                                        sequenceData: thisB.sequencedata.value,
+                                        organism: thisB.browser.config.dataset_id,
+                                        username: thisB.user.email
+                                    },
+                                    handleAs: 'json',
+                                    method: 'post'
+                                }).then(function() {
+                                    thisB.hide();
+                                    thisB.browser.clearHighlight();
+                                    thisB.browser.view.redrawTracks();
+                                }, function(error) {
+                                    thisB.error.innerHTML = error.message + '<br>' + ((error.response || {}).data || {}).error;
+                                    console.error(error);
+                                });
+                            }
                         }
                     }
                 }).placeAt(actionBar);
@@ -116,6 +212,7 @@ define([
                     ]
                 });
 
+                this.breed = new TextBox({id: 'lsaa_breed'});
                 this.description = new TextBox({id: 'lsaa_description'});
                 this.sequencedata = dom.create('textarea', { style: { height: '60px', width: '100%' }, id: 'sequencedata' });
                 this.error = dom.create('div', { 'id': 'error', 'class': 'errormsg' });
@@ -128,6 +225,7 @@ define([
                     dom.create('label', { 'for': 'lsaa_start', innerHTML: 'Start: ' }), this.start.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_end', innerHTML: 'End: ' }), this.end.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
+                    dom.create('label', { 'for': 'lsaa_breed', innerHTML: 'Breed: ' }), this.breed.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_description', innerHTML: 'Description: ' }), this.description.domNode, br(),
                     dom.create('label', { 'for': 'sequencedata', innerHTML: 'Sequence data: ' }), this.sequencedata, br(),
                     this.error, br()
