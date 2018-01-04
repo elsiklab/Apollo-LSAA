@@ -24,9 +24,13 @@ class AltLociTrackController {
         json.features features, { it ->
             uniqueID it.uniqueName
             name it.name
+            type it.type
             start it.featureLocation.fmin
             end it.featureLocation.fmax
-            type it.type
+            orientation it.orientation
+            size_of_loci (it.featureLocation.fmax - it.featureLocation.fmin) + 1
+            size_of_input (it.endPosition - it.startPosition) + 1
+            breed it.breed.nameAndIdentifier
             description it.description
         }
 
