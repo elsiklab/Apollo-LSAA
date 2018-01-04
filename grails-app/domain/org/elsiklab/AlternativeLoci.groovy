@@ -15,7 +15,12 @@ class AlternativeLoci extends BiologicalRegion {
         reversed nullable: true
         fastaFile nullable: true
         description nullable: true
+        breed nullable: true
     }
+
+    static belongsTo = [
+            Breed
+    ]
 
     String type
     String description
@@ -25,6 +30,7 @@ class AlternativeLoci extends BiologicalRegion {
     Integer endPosition
     Integer orientation
     FastaFile fastaFile
+    Breed breed
 
 
     static mapping = {

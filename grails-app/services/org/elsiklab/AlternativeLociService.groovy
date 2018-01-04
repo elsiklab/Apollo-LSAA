@@ -304,7 +304,16 @@ class AlternativeLociService {
         log.debug "altLoci: ${alternativeLoci.uniqueName} with breedString: ${breedString}"
         def breedArray = breedString.split("\\|")
         def lboIdentifierPair = breedArray[0].split(":")
-        featureService.addNonPrimaryDbxrefs(alternativeLoci, lboIdentifierPair[0], lboIdentifierPair[1])
+        Breed breed = Breed.findByIdentifierAndName(breedArray[0], breedArray[1])
+        if (breed == null) {
+            breed = new Breed(
+                    identifier: breedArray[0],
+                    name: breedArray[1],
+                    organism: alternativeLoci.featureLocation.sequence.organism
+            ).save(flush: true, failOnError: true)
+        }
+        breed.addToAlternativeLoci(alternativeLoci)
+        alternativeLoci.breed = breed
     }
 
     /**
