@@ -104,7 +104,11 @@ define([
                                     valid = false;
                                     window.alert("Error: Sequence data cannot be empty");
                                 }
-                                if (start > end) {
+                                if (!thisB.sequencedata.value.match(/^[ATCGatcg]+$/)) {
+                                    valid = false;
+                                    window.alert("Error: Sequence data contains non-nucleotide characters");
+                                }
+                                if (parseInt(start) > parseInt(end)) {
                                     valid = false;
                                     window.alert("Error: Correction Start greater than End");
                                 }
@@ -147,7 +151,11 @@ define([
                                 valid = false;
                                 window.alert("Error: Sequence data cannot be empty");
                             }
-                            if (start > end) {
+                            if (!thisB.sequencedata.value.match(/^[ATCGatcg]+$/)) {
+                                valid = false;
+                                window.alert("Error: Sequence data contains non-nucleotide characters");
+                            }
+                            if (parseInt(start) > parseInt(end)) {
                                 valid = false;
                                 window.alert("Error: Correction Start greater than End");
                             }

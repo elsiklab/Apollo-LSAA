@@ -98,7 +98,7 @@ define([
 
                                 var start = thisB.start.get('value');
                                 var end = thisB.end.get('value');
-                                if (start > end) {
+                                if (parseInt(start) > parseInt(end)) {
                                     valid = false;
                                     window.alert("Error: Deletion Start greater than End");
                                 }
@@ -135,7 +135,7 @@ define([
                         else {
                             var start = thisB.start.get('value');
                             var end = thisB.end.get('value');
-                            if (start > end) {
+                            if (parseInt(start) > parseInt(end)) {
                                 valid = false;
                                 window.alert("Error: Deletion Start greater than End");
                             }

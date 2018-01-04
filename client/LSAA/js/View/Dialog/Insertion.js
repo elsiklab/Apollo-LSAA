@@ -141,7 +141,10 @@ define([
                                 valid = false;
                                 window.alert("Error: Sequence data cannot be empty");
                             }
-
+                            if (!thisB.sequencedata.value.match(/^[ATCGatcg]+$/)) {
+                                valid = false;
+                                window.alert("Error: Sequence data contains non-nucleotide characters");
+                            }
                             if (valid) {
                                 request(thisB.contextPath + '/../alternativeLoci/createInsertion', {
                                     data: {
