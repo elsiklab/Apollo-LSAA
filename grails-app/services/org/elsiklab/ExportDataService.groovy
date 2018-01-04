@@ -18,8 +18,8 @@ class ExportDataService {
     public static final String REFERENCE = "reference"
 
     /**
-     * Given an organism, generate a JSON representation of an alternate version of the sequence by
-     * incorporating all alternative loci
+     * Given an organism, generate a JSON representation of an alternate version of sequences that
+     * have been annotated with Alternative Loci
      * @param organism
      */
     def getTransformationAsJson(Organism organism) {
@@ -31,6 +31,123 @@ class ExportDataService {
 
         altLociList.each { altLoci ->
             // get altLoci feature location sequence name
+            String sequenceName = altLoci.featureLocation.sequence.name
+            if (!sequenceToAltLociMap.get(sequenceName)) {
+                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
+                sequenceToAltLociMap[sequenceName] = [altLoci]
+            }
+            else {
+                // append to the array of altLoci
+                sequenceToAltLociMap[sequenceName] += [altLoci]
+            }
+        }
+
+        for (String sequenceName: sequenceToAltLociMap.keySet()) {
+            Sequence sequence = Sequence.findByName(sequenceName)
+            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
+            // sort the altLoci based on their fmin
+            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
+            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
+            returnObject.put(sequenceName, transformedJsonArray)
+        }
+
+        return returnObject
+    }
+
+    /**
+     * Given an organism, generate a JSON representation of an alternate version of sequences that
+     * have been annotated with Alternative Loci from a given breed
+     * @param organism
+     * @param breed
+     * @return
+     */
+    def getTransformationAsJson(Organism organism, Breed breed) {
+        log.debug "[ExportDataService][getTransformationAsJson] organism: ${organism.commonName} breed: ${breed}"
+        def altLociList = breed.alternativeLoci
+        log.debug "[ExportDataService][getTransformationAsJson] altLoci list size for organism: ${altLociList.size()}"
+        def sequenceToAltLociMap = [:]
+        JSONObject returnObject = new JSONObject()
+
+        altLociList.each { altLoci ->
+            // get altLoci feature location sequence name
+            altLoci.refresh()
+            String sequenceName = altLoci.featureLocation.sequence.name
+            if (!sequenceToAltLociMap.get(sequenceName)) {
+                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
+                sequenceToAltLociMap[sequenceName] = [altLoci]
+            }
+            else {
+                // append to the array of altLoci
+                sequenceToAltLociMap[sequenceName] += [altLoci]
+            }
+        }
+
+        for (String sequenceName: sequenceToAltLociMap.keySet()) {
+            Sequence sequence = Sequence.findByName(sequenceName)
+            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
+            // sort the altLoci based on their fmin
+            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
+            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
+            returnObject.put(sequenceName, transformedJsonArray)
+        }
+
+        return returnObject
+    }
+
+//    def getTransformationAsJson(Organism organism, Breed breed, ArrayList<Sequence> sequences) {
+//        log.debug "[ExportDataService][getTransformationAsJson] organism: ${organism.commonName} breed: ${breed} sequences: ${sequences?.size()}"
+//        def altLociList = breed.alternativeLoci
+//        def filteredAltLociList = []
+//        altLociList.each { altLoci ->
+//            if (altLoci.featureLocation.sequence in sequences) {
+//                filteredAltLociList.add(altLoci)
+//            }
+//        }
+//
+//        def sequenceToAltLociMap = [:]
+//        JSONObject returnObject = new JSONObject()
+//
+//        altLociList.each { altLoci ->
+//            // get altLoci feature location sequence name
+//            String sequenceName = altLoci.featureLocation.sequence.name
+//            if (!sequenceToAltLociMap.get(sequenceName)) {
+//                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
+//                sequenceToAltLociMap[sequenceName] = [altLoci]
+//            }
+//            else {
+//                // append to the array of altLoci
+//                sequenceToAltLociMap[sequenceName] += [altLoci]
+//            }
+//        }
+//
+//        for (String sequenceName: sequenceToAltLociMap.keySet()) {
+//            Sequence sequence = Sequence.findByName(sequenceName)
+//            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
+//            // sort the altLoci based on their fmin
+//            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
+//            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
+//            returnObject.put(sequenceName, transformedJsonArray)
+//        }
+//
+//        return returnObject
+//    }
+
+    /**
+     * Given an organism, generate a JSON representation of an alternate version of sequences that
+     * have been annotated with a given list of Alternative Loci from a given breed
+     * @param organism
+     * @param breed
+     * @param altLociList
+     * @return
+     */
+    def getTransformationAsJson(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList) {
+        log.debug "[ExportDataService][getTransformationAsJson] organism: ${organism.commonName} breed: ${breed} altLociList: ${altLociList?.size()}"
+        def sequenceToAltLociMap = [:]
+        JSONObject returnObject = new JSONObject()
+
+        altLociList.each { altLoci ->
+            // get altLoci feature location sequence name
+            altLoci.refresh()
             String sequenceName = altLoci.featureLocation.sequence.name
             if (!sequenceToAltLociMap.get(sequenceName)) {
                 // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
