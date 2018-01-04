@@ -44,7 +44,7 @@ class AlternativeLociService {
      */
     def createCorrection(JSONObject jsonObject, Organism organism, Sequence sequence) {
         log.debug "${jsonObject.toString()}"
-        String name = UUID.randomUUID()
+        String uniqueName = UUID.randomUUID()
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
         int orientation = Integer.parseInt(jsonObject.orientation)
@@ -57,16 +57,16 @@ class AlternativeLociService {
         }
 
         log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
-        String fastaFilePrefix = "${organism.id}-${sequenceName}-${name}"
+        String fastaFilePrefix = "${uniqueName}"
         String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
         def file = new File(fastaFileName)
         // TODO: a better way to write this file and move this to a method
-        file << ">${name} ${TYPE_CORRECTION} ${sequenceName} ${organism.id}\n"
+        file << ">${uniqueName} ${TYPE_CORRECTION} ${sequenceName} ${organism.id}\n"
         file << jsonObject.sequenceData
         fastaFileService.generateFastaIndexFile(fastaFileName)
 
         FastaFile fastaFile = new FastaFile(
-                sequenceName: name, // the fasta sequence name
+                sequenceName: uniqueName, // the fasta sequence name
                 fileName: file.getCanonicalPath(), // the direct file path
                 originalName: fastaFilePrefix, // the file name
                 //username: 'admin',
@@ -76,9 +76,9 @@ class AlternativeLociService {
 
         // Corrections will always default their startPosition to 0 and endPosition to len(sequence) - 1
         AlternativeLoci alternativeLoci = new AlternativeLoci(
-                name: fastaFilePrefix + '-alt',
                 type: TYPE_CORRECTION,
-                uniqueName: name,
+                uniqueName: uniqueName,
+                name: uniqueName,
                 description: description,
                 startPosition: 0,
                 endPosition: jsonObject.sequenceData.length() - 1,
@@ -324,6 +324,7 @@ class AlternativeLociService {
     def checkForOverlappingAlternativeLoci(JSONObject jsonObject) {
         String sequenceName = jsonObject.sequence
         int start, end
+
         if (jsonObject.has("start")) {
             start = jsonObject.getInt("start") - 1
         }
@@ -337,11 +338,12 @@ class AlternativeLociService {
             end = jsonObject.getInt("position") - 1
         }
 
+        String breedString = jsonObject.breed
+        String breedIdentifier = breedString.split("\\|")[0]
         def overlappingAlternativeLoci = AlternativeLoci.executeQuery(
-                "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
-                [querySequence: sequenceName, queryFmin: start, queryFmax: end]
+                "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE a.breed.identifier = :queryBreedIdentifier AND fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
+                [queryBreedIdentifier: breedIdentifier, querySequence: sequenceName, queryFmin: start, queryFmax: end]
         )
-
         return overlappingAlternativeLoci.size() != 0
     }
 
