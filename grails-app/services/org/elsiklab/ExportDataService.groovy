@@ -13,6 +13,7 @@ import org.ho.yaml.exception.YamlException
 @Transactional
 class ExportDataService {
 
+    def grailsApplication
     def fastaFileService
 
     public static final String REFERENCE = "reference"
@@ -22,35 +23,12 @@ class ExportDataService {
      * have been annotated with Alternative Loci
      * @param organism
      */
-    def getTransformationAsJson(Organism organism) {
+    def getTransformationAsJson(Organism organism, boolean exportEntireGenome = false) {
         log.debug "organism ${organism.commonName}"
         def altLociList = getAltLoci(organism)
         log.debug "altLoci list size for organism: ${altLociList.size()}"
         def sequenceToAltLociMap = [:]
-        JSONObject returnObject = new JSONObject()
-
-        altLociList.each { altLoci ->
-            // get altLoci feature location sequence name
-            String sequenceName = altLoci.featureLocation.sequence.name
-            if (!sequenceToAltLociMap.get(sequenceName)) {
-                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
-                sequenceToAltLociMap[sequenceName] = [altLoci]
-            }
-            else {
-                // append to the array of altLoci
-                sequenceToAltLociMap[sequenceName] += [altLoci]
-            }
-        }
-
-        for (String sequenceName: sequenceToAltLociMap.keySet()) {
-            Sequence sequence = Sequence.findByName(sequenceName)
-            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
-            // sort the altLoci based on their fmin
-            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
-            returnObject.put(sequenceName, transformedJsonArray)
-        }
-
+        JSONObject returnObject = buildJson(organism, altLociList, exportEntireGenome)
         return returnObject
     }
 
@@ -61,36 +39,12 @@ class ExportDataService {
      * @param breed
      * @return
      */
-    def getTransformationAsJson(Organism organism, Breed breed) {
+    def getTransformationAsJson(Organism organism, Breed breed, boolean exportEntireGenome = false) {
         log.debug "[ExportDataService][getTransformationAsJson] organism: ${organism.commonName} breed: ${breed}"
         def altLociList = breed.alternativeLoci
         log.debug "[ExportDataService][getTransformationAsJson] altLoci list size for organism: ${altLociList.size()}"
         def sequenceToAltLociMap = [:]
-        JSONObject returnObject = new JSONObject()
-
-        altLociList.each { altLoci ->
-            // get altLoci feature location sequence name
-            altLoci.refresh()
-            String sequenceName = altLoci.featureLocation.sequence.name
-            if (!sequenceToAltLociMap.get(sequenceName)) {
-                // if sequenceName doesn't exist, then create an array of altLoci for that sequence name
-                sequenceToAltLociMap[sequenceName] = [altLoci]
-            }
-            else {
-                // append to the array of altLoci
-                sequenceToAltLociMap[sequenceName] += [altLoci]
-            }
-        }
-
-        for (String sequenceName: sequenceToAltLociMap.keySet()) {
-            Sequence sequence = Sequence.findByName(sequenceName)
-            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
-            // sort the altLoci based on their fmin
-            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
-            returnObject.put(sequenceName, transformedJsonArray)
-        }
-
+        JSONObject returnObject = buildJson(organism, altLociList, exportEntireGenome)
         return returnObject
     }
 
@@ -140,10 +94,29 @@ class ExportDataService {
      * @param altLociList
      * @return
      */
-    def getTransformationAsJson(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList) {
+    def getTransformationAsJson(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList, boolean exportEntireGenome = false) {
         log.debug "[ExportDataService][getTransformationAsJson] organism: ${organism.commonName} breed: ${breed} altLociList: ${altLociList?.size()}"
         def sequenceToAltLociMap = [:]
-        JSONObject returnObject = new JSONObject()
+        JSONObject returnObject = buildJson(organism, altLociList, exportEntireGenome)
+        return returnObject
+    }
+
+    /**
+     *
+     * @param organism
+     * @param altLociList
+     * @param exportEntireGenome
+     */
+    def buildJson(Organism organism, def altLociList, boolean exportEntireGenome = false) {
+        def returnObject = new JSONObject()
+        def sequenceToAltLociMap = [:]
+
+        if (exportEntireGenome) {
+            organism.refresh()
+            organism.sequences.each { sequence ->
+                sequenceToAltLociMap[sequence.name] = []
+            }
+        }
 
         altLociList.each { altLoci ->
             // get altLoci feature location sequence name
@@ -159,6 +132,8 @@ class ExportDataService {
             }
         }
 
+        long start = System.currentTimeMillis()
+
         for (String sequenceName: sequenceToAltLociMap.keySet()) {
             Sequence sequence = Sequence.findByName(sequenceName)
             def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
@@ -167,6 +142,9 @@ class ExportDataService {
             JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
             returnObject.put(sequenceName, transformedJsonArray)
         }
+
+        long end = System.currentTimeMillis()
+        log.debug "time taken to generate transformationArray: ${end - start} ms"
 
         return returnObject
     }
@@ -185,68 +163,79 @@ class ExportDataService {
         def previousAltLoci
         int previousAltLociFmax
         String genomeFasta = sequence.organism.directory + File.separator + sequence.organism.genomeFasta
-        long start = System.currentTimeMillis()
 
-        for (altLoci in altLociList) {
+        if (altLociList.size() == 0) {
             JSONObject sequenceJsonObject = new JSONObject()
             sequenceJsonObject.put("name", sequence.name)
             sequenceJsonObject.put("description", "reference genome")
             sequenceJsonObject.put("type", REFERENCE)
             sequenceJsonObject.put("source", genomeFasta)
             sequenceJsonObject.put("source_sequence", sequence.name)
-            if (previousAltLociFmax) {
-                sequenceJsonObject.put("fmin", previousAltLociFmax)
-            }
-            else {
-                sequenceJsonObject.put("fmin", sequence.start)
-            }
-            sequenceJsonObject.put("fmax", (altLoci.featureLocation.fmin))
+            sequenceJsonObject.put("fmin", sequence.start)
+            sequenceJsonObject.put("fmax", sequence.end)
             sequenceJsonObject.put("strand", 1)
             transformationArray.add(sequenceJsonObject)
-
-            JSONObject altLociJsonObject = new JSONObject()
-            altLociJsonObject.put("name", altLoci.uniqueName)
-
-            if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
-                altLociJsonObject.put("source_sequence", sequence.name)
-            }
-            else {
-                altLociJsonObject.put("source_sequence", altLoci.uniqueName)
-            }
-
-            altLociJsonObject.put("source_start", altLoci.startPosition)
-            altLociJsonObject.put("source_end", altLoci.endPosition)
-            altLociJsonObject.put("description", altLoci.description)
-            altLociJsonObject.put("breed", altLoci.breed.nameAndIdentifier)
-
-            if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
-                altLociJsonObject.put("source", genomeFasta)
-            }
-            else {
-                altLociJsonObject.put("source", altLoci.fastaFile.fileName)
-            }
-            altLociJsonObject.put("type", altLoci.type.toLowerCase())
-            altLociJsonObject.put("fmin", altLoci.featureLocation.fmin)
-            altLociJsonObject.put("fmax", altLoci.featureLocation.fmax)
-            altLociJsonObject.put("strand", altLoci.featureLocation.strand)
-            altLociJsonObject.put("orientation", altLoci.orientation)
-            transformationArray.add(altLociJsonObject)
-            previousAltLociFmax = altLoci.featureLocation.fmax
-            previousAltLoci = altLoci
         }
+        else {
+            for (altLoci in altLociList) {
+                JSONObject sequenceJsonObject = new JSONObject()
+                sequenceJsonObject.put("name", sequence.name)
+                sequenceJsonObject.put("description", "reference genome")
+                sequenceJsonObject.put("type", REFERENCE)
+                sequenceJsonObject.put("source", genomeFasta)
+                sequenceJsonObject.put("source_sequence", sequence.name)
+                if (previousAltLociFmax) {
+                    sequenceJsonObject.put("fmin", previousAltLociFmax)
+                }
+                else {
+                    sequenceJsonObject.put("fmin", sequence.start)
+                }
+                sequenceJsonObject.put("fmax", (altLoci.featureLocation.fmin))
+                sequenceJsonObject.put("strand", 1)
+                transformationArray.add(sequenceJsonObject)
 
-        JSONObject finalSequenceJsonObject = new JSONObject()
-        finalSequenceJsonObject.put("name", sequence.name)
-        finalSequenceJsonObject.put("description", "reference genome")
-        finalSequenceJsonObject.put("type", REFERENCE)
-        finalSequenceJsonObject.put("source", genomeFasta)
-        finalSequenceJsonObject.put("source_sequence", sequence.name)
-        finalSequenceJsonObject.put("fmin", previousAltLociFmax)
-        finalSequenceJsonObject.put("fmax", sequence.end)
-        transformationArray.put(finalSequenceJsonObject)
+                JSONObject altLociJsonObject = new JSONObject()
+                altLociJsonObject.put("name", altLoci.uniqueName)
 
-        long end = System.currentTimeMillis()
-        log.debug "time taken to generate transformationArray: ${end - start} ms"
+                if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
+                    altLociJsonObject.put("source_sequence", sequence.name)
+                }
+                else {
+                    altLociJsonObject.put("source_sequence", altLoci.uniqueName)
+                }
+
+                altLociJsonObject.put("source_start", altLoci.startPosition)
+                altLociJsonObject.put("source_end", altLoci.endPosition)
+                altLociJsonObject.put("description", altLoci.description)
+                altLociJsonObject.put("breed", altLoci.breed.nameAndIdentifier)
+
+                if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
+                    altLociJsonObject.put("source", genomeFasta)
+                }
+                else {
+                    altLociJsonObject.put("source", altLoci.fastaFile.fileName)
+                }
+                altLociJsonObject.put("type", altLoci.type.toLowerCase())
+                altLociJsonObject.put("fmin", altLoci.featureLocation.fmin)
+                altLociJsonObject.put("fmax", altLoci.featureLocation.fmax)
+                altLociJsonObject.put("strand", altLoci.featureLocation.strand)
+                altLociJsonObject.put("orientation", altLoci.orientation)
+                transformationArray.add(altLociJsonObject)
+                previousAltLociFmax = altLoci.featureLocation.fmax
+                previousAltLoci = altLoci
+            }
+
+            JSONObject finalSequenceJsonObject = new JSONObject()
+            finalSequenceJsonObject.put("name", sequence.name)
+            finalSequenceJsonObject.put("description", "reference genome")
+            finalSequenceJsonObject.put("type", REFERENCE)
+            finalSequenceJsonObject.put("source", genomeFasta)
+            finalSequenceJsonObject.put("source_sequence", sequence.name)
+            finalSequenceJsonObject.put("fmin", previousAltLociFmax)
+            finalSequenceJsonObject.put("fmax", sequence.end)
+            finalSequenceJsonObject.put("strand", 1)
+            transformationArray.put(finalSequenceJsonObject)
+        }
 
         return transformationArray
     }
@@ -272,12 +261,12 @@ class ExportDataService {
      * have been annotated with Alternative Loci
      * @param organism
      */
-    def getTransformationAsFasta(Organism organism) {
+    def getTransformationAsFasta(Organism organism, boolean exportEntireGenome = false) {
         log.debug "organism ${organism.commonName}"
         def altLociList = getAltLoci(organism)
         log.debug "altLoci list size for organism: ${altLociList.size()}"
         def transformedFastaMap = [:]
-        File fastaFile = buildSequence(altLociList)
+        File fastaFile = buildSequence(organism, altLociList, exportEntireGenome)
         transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
         return transformedFastaMap
     }
@@ -289,12 +278,12 @@ class ExportDataService {
      * @param breed
      * @return
      */
-    def getTransformationAsFasta(Organism organism, Breed breed) {
+    def getTransformationAsFasta(Organism organism, Breed breed, boolean exportEntireGenome = false) {
         log.debug "organism ${organism.commonName} breed: ${breed}"
         def altLociList = breed.alternativeLoci
         log.debug "altLoci list size for organism: ${altLociList.size()}"
         def transformedFastaMap = [:]
-        def fastaFile = buildSequence(altLociList)
+        def fastaFile = buildSequence(organism, altLociList, exportEntireGenome)
         transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
         return transformedFastaMap
     }
@@ -304,10 +293,10 @@ class ExportDataService {
      * have been annotated with a given list of Alternative Loci from a given breed
      * @param organism
      */
-    def getTransformationAsFasta(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList) {
+    def getTransformationAsFasta(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList, boolean exportEntireGenome = false) {
         log.debug "organism ${organism.commonName} breed: ${breed} altLociList: ${altLociList.size()}"
         def transformedFastaMap = [:]
-        def fastaFile = buildSequence(altLociList)
+        def fastaFile = buildSequence(organism, altLociList, exportEntireGenome)
         transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
         return transformedFastaMap
     }
@@ -317,8 +306,9 @@ class ExportDataService {
      * @param altLociList
      * @return
      */
-    def buildSequence(def altLociList) {
-        def fastaFile = new File("output.fasta")
+    def buildSequence(Organism organism, def altLociList, boolean exportEntireGenome = false) {
+        String fileName = grailsApplication.config.lsaa.exportDirectory + File.separator + UUID.randomUUID() + FastaFileService.FA_SUFFIX
+        def fastaFile = new File(fileName)
         def sequenceToAltLociMap = [:]
         def timer = new Timer()
         def task = timer.runAfter(120 * 1000) {
@@ -326,8 +316,17 @@ class ExportDataService {
             fastaFile.delete()
         }
 
+        if (exportEntireGenome) {
+            organism.refresh()
+            organism.sequences.each { sequence ->
+                sequenceToAltLociMap[sequence.name] = []
+            }
+        }
+
         altLociList.each { altLoci ->
+            println ">>>> ${altLoci.name}"
             altLoci.refresh()
+            println ">>>> ${altLoci.name}"
             String sequenceName = altLoci.featureLocation.sequence.name
             if (!sequenceToAltLociMap.get(sequenceName)) {
                 sequenceToAltLociMap[sequenceName] = [altLoci]

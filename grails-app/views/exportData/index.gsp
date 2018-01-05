@@ -27,7 +27,7 @@
     </head>
     <body>
     <g:render template="../layouts/reportHeader"/>
-        <h3 class="header">Export Scaffolds with LSAA</h3>
+        <h3 class="header">Export with LSAA</h3>
         
         <div class="container">
             <g:if test="${error}">
@@ -40,7 +40,7 @@
                           optionKey="id"
                           optionValue="commonName"
                           noSelection="[null:'Select an organism']"
-                          onchange="updateOrganism(this.value);resetValue()" />
+                          onchange="updateOrganism(this.value)" />
             </div>
             <br/>
             <br/>
@@ -69,14 +69,21 @@
                         <option value="text">View</option>
                         <option value="download">Download</option>
                     </select>
-                    <g:submitButton name="Submit"></g:submitButton>
+                    <div>
+                        <br/>
+                        <span><b>Export Scaffolds with LSAA: </b></span><span><g:actionSubmit value="Submit" action="exportSequences"/></span>
+                    </div>
+                    %{--<div>--}%
+                        %{--<br/>--}%
+                        %{--<span><b>Export Entire Genome with LSAA: </b></span><g:actionSubmit value="Submit" action="exportGenome"/>--}%
+                    %{--</div>--}%
                 </g:form>
             </div>
         </div>
     <script>
         function updateOrganism(organismId) {
-            jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganism', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
-            //jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'exportData/updateOrganismSequences', success: function(data,textStatus){jQuery('#sequenceContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'exportData/updateOrganism', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            //jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganismSequences', success: function(data,textStatus){jQuery('#sequenceContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
 
         function updateSequences(options) {
@@ -86,10 +93,10 @@
                     selectedSequences.push(options[i].value);
                 }
             }
-            jQuery.ajax({type:'POST',data: 'selectedSequences=' + selectedSequences.join(','), url:'updateSequences', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            jQuery.ajax({type:'POST',data: 'selectedSequences=' + selectedSequences.join(','), url:'exportData/updateSequences', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
         function updateBreed(breedId) {
-            jQuery.ajax({type:'POST',data:'breedId=' + breedId, url:'updateBreed', success: function(data,textStatus){jQuery('#altLociContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            jQuery.ajax({type:'POST',data:'breedId=' + breedId, url:'exportData/updateBreed', success: function(data,textStatus){jQuery('#altLociContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
         function updateAlternativeLoci(options) {
             var selectedAlternativeLoci = [];
@@ -98,7 +105,7 @@
                     selectedAlternativeLoci.push(options[i].value);
                 }
             }
-            jQuery.ajax({type:'POST',data:'selectedAlternativeLoci=' + selectedAlternativeLoci.join(','), url:'updateAlternativeLoci', success: function(data,textStatus){jQuery('#altLociContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            jQuery.ajax({type:'POST',data:'selectedAlternativeLoci=' + selectedAlternativeLoci.join(','), url:'exportData/updateAlternativeLoci', success: function(data,textStatus){jQuery('#altLociContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
         function resetValue() {
             jQuery('#breedContainer').html("N/A");

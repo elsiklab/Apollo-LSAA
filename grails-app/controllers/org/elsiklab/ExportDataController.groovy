@@ -13,12 +13,18 @@ class ExportDataController {
     def grailsApplication
     def exportDataService
 
+    public static Boolean exportEntireGenome = false
     public static Organism selectedOrganism
     public static Breed selectedBreed
     public static ArrayList<Sequence> selectedSequenceList = new ArrayList<Sequence>()
     public static def selectedAlternativeLociList = []
 
     def index() {
+        exportEntireGenome = false
+        selectedOrganism = null
+        selectedBreed = null
+        selectedSequenceList.clear()
+        selectedAlternativeLociList.clear()
         render view: 'index'
     }
 
@@ -26,8 +32,23 @@ class ExportDataController {
      *
      * @return
      */
-    def export() {
+    def exportSequences() {
         log.debug "params: ${params.toString()}"
+        exportEntireGenome = false
+        if(params.type == 'JSON') {
+            getTransformedJson()
+        }
+        else if(params.type == 'FASTA') {
+            getTransformedFasta()
+        }
+        else {
+            render text: 'Unknown download method'
+        }
+    }
+
+    def exportGenome() {
+        log.debug "exportGenome: ${params.toString()}"
+        exportEntireGenome = true
         if(params.type == 'JSON') {
             getTransformedJson()
         }
@@ -53,13 +74,13 @@ class ExportDataController {
         if (selectedOrganism) {
             def transformedJsonObject
             if (selectedAlternativeLociList.size() > 0) {
-                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism, selectedBreed, selectedAlternativeLociList)
+                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism, selectedBreed, selectedAlternativeLociList, exportEntireGenome)
             }
             else if (selectedBreed) {
-                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism, selectedBreed)
+                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism, selectedBreed, exportEntireGenome)
             }
             else {
-                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism)
+                transformedJsonObject = exportDataService.getTransformationAsJson(selectedOrganism, exportEntireGenome)
             }
 
             response.contentType = 'text/plain'
@@ -89,20 +110,20 @@ class ExportDataController {
         if (selectedOrganism) {
             def transformedFastaMap
             if (selectedAlternativeLociList.size() > 0) {
-                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, selectedAlternativeLociList)
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, selectedAlternativeLociList, exportEntireGenome)
             }
             else if (selectedBreed) {
-                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed)
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, exportEntireGenome)
             }
             else {
-                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism)
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, exportEntireGenome)
             }
             log.debug "Transformed FASTA map: ${transformedFastaMap.toString()}"
 
             response.contentType = 'text/plain'
             //response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
             if (params.download == 'download') {
-                response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
+                response.setHeader("Content-disposition", "attachment;filename=output.fasta")
             }
 
             File file = new File(transformedFastaMap.get(selectedOrganism.id))
@@ -194,8 +215,8 @@ class ExportDataController {
     def updateAlternativeLoci() {
         log.debug "params: ${params.toString()}"
         String selectedAlternativeLoci = params.selectedAlternativeLoci
+        selectedAlternativeLociList = []
         if (selectedAlternativeLoci != "All") {
-            selectedAlternativeLociList = []
             if (selectedAlternativeLoci.length() != 0 && selectedAlternativeLoci != "All") {
                 selectedAlternativeLoci.split(",").each { alternativeLociId ->
                     AlternativeLoci alternativeLoci = AlternativeLoci.findById(alternativeLociId)
