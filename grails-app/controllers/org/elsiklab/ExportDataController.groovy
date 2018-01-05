@@ -81,9 +81,23 @@ class ExportDataController {
      */
     def getTransformedFasta() {
         log.debug "params: ${params.toString()}"
-        def organism = Organism.findByCommonName(params.organism) ?: Organism.findById(params.organism)
-        if (organism) {
-            def transformedFastaMap = exportDataService.getTransformationAsFasta(organism)
+        log.debug "selectedOrganism: ${selectedOrganism.commonName}"
+        log.debug "selectedBreed: ${selectedBreed?.nameAndIdentifier}"
+        //log.debug "[exportDataController][getTransformedJson] selectedSequenceList: ${selectedSequenceList?.size()}"
+        log.debug "selectedAlternativeLociList: ${selectedAlternativeLociList?.size()}"
+
+        if (selectedOrganism) {
+            def transformedFastaMap
+            if (selectedAlternativeLociList.size() > 0) {
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, selectedAlternativeLociList)
+            }
+            else if (selectedBreed) {
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed)
+            }
+            else {
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism)
+            }
+
             response.contentType = 'text/plain'
             if (params.download == 'download') {
                 response.setHeader('Content-disposition', 'attachment;filename=output.fasta')
@@ -150,7 +164,7 @@ class ExportDataController {
 
             if (alternativeLociList.size() > 0) {
                 render g.select(id: 'alternativeLociList', name: 'alternativeLoci.id', multiple: 'multiple',
-                        from: alternativeLociList, optionKey: 'id', optionValue: 'uniqueName', noSelection: [All: 'All'], onchange: "updateAlternativeLoci(this.options)"
+                        from: alternativeLociList, optionKey: 'id', optionValue: 'name', noSelection: [All: 'All'], onchange: "updateAlternativeLoci(this.options)"
                 )
             }
             else {
