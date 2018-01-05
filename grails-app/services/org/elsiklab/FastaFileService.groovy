@@ -12,6 +12,9 @@ import java.nio.file.Paths
 
 class FastaFileService {
 
+    def grailsApplication
+
+    public static final String FA_SUFFIX = ".fa"
     public static final String FAI_SUFFIX = ".fai"
 
     /**
@@ -93,4 +96,12 @@ class FastaFileService {
         return returnSequence
     }
 
+    def writeSequenceToFastaFile(String sequenceName, String sequence, String type) {
+        String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + sequenceName + FA_SUFFIX
+        def file = new File(fastaFileName)
+        file << ">${sequenceName} ${type}\n"
+        file << sequence
+        generateFastaIndexFile(fastaFileName)
+        return file
+    }
 }

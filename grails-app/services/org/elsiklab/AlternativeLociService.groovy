@@ -57,19 +57,11 @@ class AlternativeLociService {
         }
 
         log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
-        String fastaFilePrefix = "${uniqueName}"
-        String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
-        def file = new File(fastaFileName)
-        // TODO: a better way to write this file and move this to a method
-        file << ">${uniqueName} ${TYPE_CORRECTION} ${sequenceName} ${organism.id}\n"
-        file << jsonObject.sequenceData
-        fastaFileService.generateFastaIndexFile(fastaFileName)
-
+        File file = fastaFileService.writeSequenceToFastaFile(uniqueName, jsonObject.sequenceData, TYPE_CORRECTION)
         FastaFile fastaFile = new FastaFile(
                 sequenceName: uniqueName, // the fasta sequence name
                 fileName: file.getCanonicalPath(), // the direct file path
-                originalName: fastaFilePrefix, // the file name
-                //username: 'admin',
+                originalName: file.getName(), // the file name
                 dateCreated: new Date(),
                 lastModified: new Date()
         ).save(flush: true)
@@ -172,26 +164,19 @@ class AlternativeLociService {
         }
 
         log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
-        String fastaFilePrefix = "${organism.id}-${sequenceName}-${name}"
-        String fastaFileName = grailsApplication.config.lsaa.lsaaDirectory + File.separator + fastaFilePrefix + ".fa"
-        def file = new File(fastaFileName)
-        // TODO: a better way to write this file and move this to a method
-        file << ">${name} ${TYPE_INSERTION} ${sequenceName} ${organism.id}\n"
-        file << jsonObject.sequenceData
-        fastaFileService.generateFastaIndexFile(fastaFileName)
+        File file = fastaFileService.writeSequenceToFastaFile(uniqueName, jsonObject.sequenceData, TYPE_CORRECTION)
 
         FastaFile fastaFile = new FastaFile(
                 sequenceName: name, // the fasta sequence name
                 fileName: file.getCanonicalPath(), // the direct file path
-                originalName: fastaFilePrefix, // the file name
-                //username: 'admin',
+                originalName: file.getName(), // the file name
                 dateCreated: new Date(),
                 lastModified: new Date()
         ).save(flush: true)
 
         // Insertion will always default their startPosition to 0 and endPosition to len(sequence) - 1
         AlternativeLoci alternativeLoci = new AlternativeLoci(
-                name: fastaFilePrefix + '-alt',
+                name: file.getName() + '-alt',
                 type: TYPE_INSERTION,
                 uniqueName: name,
                 description: description,
