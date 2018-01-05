@@ -27,11 +27,12 @@ class AltLociTrackController {
             type it.type
             start it.featureLocation.fmin
             end it.featureLocation.fmax
-            orientation it.orientation
+            orientation it.orientation == -1 ? "Reverse" : "Forward"
             size_of_loci (it.featureLocation.fmax - it.featureLocation.fmin) + 1
             size_of_input (it.endPosition - it.startPosition) + 1
             breed it.breed.nameAndIdentifier
             description it.description
+            owner it.owner.username
         }
 
         render json.toString()
