@@ -45,7 +45,7 @@ class ExportDataController {
      */
     def getTransformedJson() {
         log.debug "params: ${params.toString()}"
-        log.debug "selectedOrganism: ${selectedOrganism.commonName}"
+        log.debug "selectedOrganism: ${selectedOrganism?.commonName}"
         log.debug "selectedBreed: ${selectedBreed?.nameAndIdentifier}"
         //log.debug "[exportDataController][getTransformedJson] selectedSequenceList: ${selectedSequenceList?.size()}"
         log.debug "selectedAlternativeLociList: ${selectedAlternativeLociList?.size()}"
@@ -97,18 +97,21 @@ class ExportDataController {
             else {
                 transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism)
             }
+            log.debug "Transformed FASTA map: ${transformedFastaMap.toString()}"
 
             response.contentType = 'text/plain'
+            //response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
             if (params.download == 'download') {
-                response.setHeader('Content-disposition', 'attachment;filename=output.fasta')
+                response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
             }
 
-            String responseData = ""
-            for (String key : transformedFastaMap.keySet()) {
-                responseData += ">${transformedFastaMap[key]["name"]} ${transformedFastaMap[key]["description"]}\n${transformedFastaMap[key]["sequence"]}\n"
+            File file = new File(transformedFastaMap.get(selectedOrganism.id))
+            if (file) {
+                response.outputStream << file.bytes
             }
-
-            render text: responseData
+            else {
+                render ([error: "Cannot find file"] as JSON)
+            }
         }
         else {
             render ([error: "Organism not found"] as JSON)

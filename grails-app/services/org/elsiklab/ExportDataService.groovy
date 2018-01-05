@@ -276,68 +276,9 @@ class ExportDataService {
         log.debug "organism ${organism.commonName}"
         def altLociList = getAltLoci(organism)
         log.debug "altLoci list size for organism: ${altLociList.size()}"
-        def sequenceToAltLociMap = [:]
         def transformedFastaMap = [:]
-
-        altLociList.each { altLoci ->
-            String sequenceName = altLoci.featureLocation.sequence.name
-            if (!sequenceToAltLociMap.get(sequenceName)) {
-                sequenceToAltLociMap[sequenceName] = [altLoci]
-            }
-            else {
-                sequenceToAltLociMap[sequenceName] += [altLoci]
-            }
-        }
-
-        for (String sequenceName: sequenceToAltLociMap.keySet()) {
-            Sequence sequence = Sequence.findByName(sequenceName)
-            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
-            // sort the altLoci based on their fmin
-            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
-            long start = System.currentTimeMillis()
-            String name = "${sequenceName}-${UUID.randomUUID().toString()}"
-            JSONArray descriptionArray = new JSONArray()
-            String fastaSequence = ""
-            for (JSONObject jsonObject : transformedJsonArray) {
-                println "jsonObject: ${jsonObject.toString()}"
-                if (jsonObject.type == REFERENCE) {
-                    fastaSequence += '<START_OF_REF>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
-                    fastaSequence += '<END_OF_REF>'
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_INVERSION.toLowerCase()) {
-                    fastaSequence += '<START_INV>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
-                    fastaSequence += '<END_INV>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_DELETION.toLowerCase()) {
-                    fastaSequence += "<DEL>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_INSERTION.toLowerCase()) {
-                    fastaSequence += "<START_INS>"
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += "<END_INS>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_CORRECTION.toLowerCase()) {
-                    fastaSequence += '<START_CORRECTION>'
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += '<END_CORRECTION>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-            }
-
-            // TODO: instead of storing in map, write to a file to have a smaller memory footprint and provide file for download
-            // Expire the file in 120 seconds to clear disk storage
-
-            long end = System.currentTimeMillis()
-            log.debug "time taken to generate transformationArray: ${end - start} ms"
-            transformedFastaMap[sequenceName] = [name: name, description: descriptionArray, sequence: fastaSequence]
-        }
-
+        File fastaFile = buildSequence(altLociList)
+        transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
         return transformedFastaMap
     }
 
@@ -352,66 +293,9 @@ class ExportDataService {
         log.debug "organism ${organism.commonName} breed: ${breed}"
         def altLociList = breed.alternativeLoci
         log.debug "altLoci list size for organism: ${altLociList.size()}"
-        def sequenceToAltLociMap = [:]
         def transformedFastaMap = [:]
-
-        altLociList.each { altLoci ->
-            altLoci.refresh()
-            String sequenceName = altLoci.featureLocation.sequence.name
-            if (!sequenceToAltLociMap.get(sequenceName)) {
-                sequenceToAltLociMap[sequenceName] = [altLoci]
-            }
-            else {
-                sequenceToAltLociMap[sequenceName] += [altLoci]
-            }
-        }
-
-        for (String sequenceName: sequenceToAltLociMap.keySet()) {
-            Sequence sequence = Sequence.findByName(sequenceName)
-            def altLociForSequenceList = sequenceToAltLociMap[sequenceName]
-            // sort the altLoci based on their fmin
-            altLociForSequenceList.sort {a,b -> a.featureLocation.fmin <=> b.featureLocation.fmin}
-            JSONArray transformedJsonArray = getTransformationAsJson(sequence, altLociForSequenceList)
-            long start = System.currentTimeMillis()
-            String name = "${sequenceName}-${UUID.randomUUID().toString()}"
-            JSONArray descriptionArray = new JSONArray()
-            String fastaSequence = ""
-            for (JSONObject jsonObject : transformedJsonArray) {
-                println "jsonObject: ${jsonObject.toString()}"
-                if (jsonObject.type == REFERENCE) {
-                    fastaSequence += '<START_OF_REF>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
-                    fastaSequence += '<END_OF_REF>'
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_INVERSION.toLowerCase()) {
-                    fastaSequence += '<START_INV>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
-                    fastaSequence += '<END_INV>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_DELETION.toLowerCase()) {
-                    fastaSequence += "<DEL>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_INSERTION.toLowerCase()) {
-                    fastaSequence += "<START_INS>"
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += "<END_INS>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-                else if (jsonObject.type == AlternativeLociService.TYPE_CORRECTION.toLowerCase()) {
-                    fastaSequence += '<START_CORRECTION>'
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += '<END_CORRECTION>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
-                }
-            }
-
-            long end = System.currentTimeMillis()
-            log.debug "time taken to generate transformationArray: ${end - start} ms"
-            transformedFastaMap[sequenceName] = [name: name, description: descriptionArray, sequence: fastaSequence]
-        }
-
+        def fastaFile = buildSequence(altLociList)
+        transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
         return transformedFastaMap
     }
 
@@ -422,8 +306,25 @@ class ExportDataService {
      */
     def getTransformationAsFasta(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList) {
         log.debug "organism ${organism.commonName} breed: ${breed} altLociList: ${altLociList.size()}"
-        def sequenceToAltLociMap = [:]
         def transformedFastaMap = [:]
+        def fastaFile = buildSequence(altLociList)
+        transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
+        return transformedFastaMap
+    }
+
+    /**
+     * Given a list of Alternative Loci, create a new sequence
+     * @param altLociList
+     * @return
+     */
+    def buildSequence(def altLociList) {
+        def fastaFile = new File("output.fasta")
+        def sequenceToAltLociMap = [:]
+        def timer = new Timer()
+        def task = timer.runAfter(120 * 1000) {
+            log.debug"removing ${fastaFile.getCanonicalPath()}"
+            fastaFile.delete()
+        }
 
         altLociList.each { altLoci ->
             altLoci.refresh()
@@ -445,44 +346,44 @@ class ExportDataService {
             long start = System.currentTimeMillis()
             String name = "${sequenceName}-${UUID.randomUUID().toString()}"
             JSONArray descriptionArray = new JSONArray()
-            String fastaSequence = ""
+            transformedJsonArray.each {
+                if (it.type != REFERENCE) descriptionArray.add("${it.name} (${it.type}) ${it.breed}")
+            }
+
+            fastaFile << ">${name} ${descriptionArray.join(",")}\n"
             for (JSONObject jsonObject : transformedJsonArray) {
                 println "jsonObject: ${jsonObject.toString()}"
                 if (jsonObject.type == REFERENCE) {
-                    fastaSequence += '<START_OF_REF>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
-                    fastaSequence += '<END_OF_REF>'
+                    fastaFile << "<START_OF_REF>"
+                    fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
+                    fastaFile <<  "<END_OF_REF>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_INVERSION.toLowerCase()) {
-                    fastaSequence += '<START_INV>'
-                    fastaSequence += fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
-                    fastaSequence += '<END_INV>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
+                    fastaFile << "<START_INV>"
+                    fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
+                    fastaFile << "<END_INV>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_DELETION.toLowerCase()) {
-                    fastaSequence += "<DEL>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
+                    fastaFile << "<DEL>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_INSERTION.toLowerCase()) {
-                    fastaSequence += "<START_INS>"
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += "<END_INS>"
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
+                    fastaFile << "<START_INS>"
+                    jsonObject.orientation == -1 ? fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
+                    fastaFile << "<END_INS>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_CORRECTION.toLowerCase()) {
-                    fastaSequence += '<START_CORRECTION>'
-                    fastaSequence += jsonObject.orientation == -1 ? fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaSequence += '<END_CORRECTION>'
-                    descriptionArray.add("${jsonObject.name} (${jsonObject.type}) ${jsonObject.breed}")
+                    fastaFile << "<START_CORRECTION>"
+                    jsonObject.orientation == -1 ? fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
+                    fastaFile << "<END_CORRECTION>"
                 }
             }
+            fastaFile << "\n"
 
             long end = System.currentTimeMillis()
-            log.debug "time taken to generate transformationArray: ${end - start} ms"
-            transformedFastaMap[sequenceName] = [name: name, description: descriptionArray, sequence: fastaSequence]
+            log.debug "time taken to generate an alternate version of sequence: ${end - start} ms"
         }
 
-        return transformedFastaMap
+        return fastaFile
     }
 
 }
