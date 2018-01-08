@@ -353,27 +353,27 @@ class ExportDataService {
             for (JSONObject jsonObject : transformedJsonArray) {
                 println "jsonObject: ${jsonObject.toString()}"
                 if (jsonObject.type == REFERENCE) {
-                    fastaFile << "<START_OF_REF>"
+                    //fastaFile << "<START_OF_REF>"
                     fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.name, jsonObject.fmin, jsonObject.fmax)
-                    fastaFile <<  "<END_OF_REF>"
+                    //fastaFile <<  "<END_OF_REF>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_INVERSION.toLowerCase()) {
-                    fastaFile << "<START_INV>"
+                    //fastaFile << "<START_INV>"
                     fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.fmin, jsonObject.fmax, true)
-                    fastaFile << "<END_INV>"
+                    //fastaFile << "<END_INV>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_DELETION.toLowerCase()) {
-                    fastaFile << "<DEL>"
+                    //fastaFile << "<DEL>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_INSERTION.toLowerCase()) {
-                    fastaFile << "<START_INS>"
+                    //fastaFile << "<START_INS>"
                     jsonObject.orientation == -1 ? fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaFile << "<END_INS>"
+                    //fastaFile << "<END_INS>"
                 }
                 else if (jsonObject.type == AlternativeLociService.TYPE_CORRECTION.toLowerCase()) {
-                    fastaFile << "<START_CORRECTION>"
+                    //fastaFile << "<START_CORRECTION>"
                     jsonObject.orientation == -1 ? fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1, true) : fastaFile << fastaFileService.readIndexedFastaRegion(jsonObject.source, jsonObject.source_sequence, jsonObject.source_start, jsonObject.source_end + 1)
-                    fastaFile << "<END_CORRECTION>"
+                    //fastaFile << "<END_CORRECTION>"
                 }
             }
             fastaFile << "\n"
