@@ -12,6 +12,7 @@ class ExportDataController {
 
     def grailsApplication
     def exportDataService
+    def alternativeLociService
 
     public static Boolean exportEntireGenome = false
     public static Organism selectedOrganism
@@ -20,6 +21,12 @@ class ExportDataController {
     public static def selectedAlternativeLociList = []
 
     def index() {
+        if (alternativeLociService.getCurrentUser()) {
+            render view: 'index'
+        }
+        else {
+            render status: 401, text: 'Failed user authentication'
+        }
         exportEntireGenome = false
         selectedOrganism = null
         selectedBreed = null
