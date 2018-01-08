@@ -164,7 +164,7 @@ class AlternativeLociService {
         }
 
         log.info "Creating FASTA file to ${grailsApplication.config.lsaa.lsaaDirectory}"
-        File file = fastaFileService.writeSequenceToFastaFile(uniqueName, jsonObject.sequenceData, TYPE_CORRECTION)
+        File file = fastaFileService.writeSequenceToFastaFile(name, jsonObject.sequenceData, TYPE_CORRECTION)
 
         FastaFile fastaFile = new FastaFile(
                 sequenceName: name, // the fasta sequence name
