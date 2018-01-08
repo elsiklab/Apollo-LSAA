@@ -25,61 +25,66 @@ class AlternativeLociController {
 
 
     def index(Integer max) {
-        params.max = Math.min(max ?: 15, 100)
+        if (alternativeLociService.getCurrentUser()) {
+            params.max = Math.min(max ?: 20, 100)
 
-        def c = Feature.createCriteria()
+            def c = Feature.createCriteria()
 
-        def list = c.list(max: params.max, offset:params.offset) {
+            def list = c.list(max: params.max, offset:params.offset) {
 
-            if(params.sort == 'owners') {
-                owners {
-                    order('username', params.order)
-                }
-            }
-            if(params.sort == 'sequencename') {
-                featureLocations {
-                    sequence {
-                        order('name', params.order)
+                if(params.sort == 'owners') {
+                    owners {
+                        order('username', params.order)
                     }
                 }
-            }
-            else if(params.sort == 'name') {
-                order('name', params.order)
-            }
-            else if(params.sort == 'cvTerm') {
-                order('class', params.order)
-            }
-            else if(params.sort == 'organism') {
-                featureLocations {
-                    sequence {
-                        organism {
-                            order('commonName', params.order)
+                if(params.sort == 'sequencename') {
+                    featureLocations {
+                        sequence {
+                            order('name', params.order)
                         }
                     }
                 }
-            }
-            else if(params.sort == 'lastUpdated') {
-                order('lastUpdated', params.order)
-            }
-
-            if(params.ownerName != null && params.ownerName != '') {
-                owners {
-                    ilike('username', '%' + params.ownerName + '%')
+                else if(params.sort == 'name') {
+                    order('name', params.order)
                 }
-            }
-            if(params.organismName != null && params.organismName != '') {
-                featureLocations {
-                    sequence {
-                        organism {
-                            ilike('commonName', '%' + params.organismName + '%')
+                else if(params.sort == 'cvTerm') {
+                    order('class', params.order)
+                }
+                else if(params.sort == 'organism') {
+                    featureLocations {
+                        sequence {
+                            organism {
+                                order('commonName', params.order)
+                            }
                         }
                     }
                 }
+                else if(params.sort == 'lastUpdated') {
+                    order('lastUpdated', params.order)
+                }
+
+                if(params.ownerName != null && params.ownerName != '') {
+                    owners {
+                        ilike('username', '%' + params.ownerName + '%')
+                    }
+                }
+                if(params.organismName != null && params.organismName != '') {
+                    featureLocations {
+                        sequence {
+                            organism {
+                                ilike('commonName', '%' + params.organismName + '%')
+                            }
+                        }
+                    }
+                }
+                'eq'('class', AlternativeLoci.class.name)
             }
-            'eq'('class', AlternativeLoci.class.name)
+            log.debug list.toString()
+            render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
         }
-        log.debug list.toString()
-        render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
+        else {
+            render status: 401, text: 'Failed user authentication'
+        }
     }
 
     def addLoci() {
