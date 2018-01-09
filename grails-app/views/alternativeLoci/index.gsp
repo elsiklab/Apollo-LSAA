@@ -5,8 +5,9 @@
         <meta name="layout" content="main">
         <title>LSAA - Alternative Loci</title>
         <style>
-        .container {
+        .wide-container {
             margin-left: 20px;
+            width: 100%;
         }
         .header {
             padding: 20px;
@@ -14,12 +15,15 @@
         td, th {
             padding: 0.5em 0.6em;
         }
+            #list-availableStatus {
+                overflow: auto;
+            }
 
         </style>
     </head>
     <body>
     <g:render template="../layouts/reportHeader"/>
-    <div class="container">
+    <div class="wide-container">
         <h3 class="header">Alternative loci</h3>
         <div id="list-availableStatus" class="content scaffold-list" role="main">
 
