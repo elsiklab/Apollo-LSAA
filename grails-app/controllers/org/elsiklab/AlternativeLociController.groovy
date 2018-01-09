@@ -3,6 +3,8 @@ package org.elsiklab
 import org.bbop.apollo.Feature
 import org.codehaus.groovy.grails.web.json.JSONObject
 
+import java.text.SimpleDateFormat
+
 import static org.springframework.http.HttpStatus.*
 
 import grails.converters.JSON
@@ -23,6 +25,7 @@ class AlternativeLociController {
     def fastaFileService
     def alternativeLociService
 
+    public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss")
 
     def index(Integer max) {
         if (alternativeLociService.getCurrentUser()) {
@@ -251,7 +254,7 @@ class AlternativeLociController {
                         def alternativeLoci = alternativeLociService.createCorrection(requestObject, organism, sequence)
                         User user = alternativeLociService.getCurrentUser(requestObject)
                         featureService.setOwner(alternativeLoci, user)
-                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type}_${alternativeLoci.dateCreated}"
+                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type.substring(0, 3)}_${dateFormat.format(alternativeLoci.dateCreated)}"
                         alternativeLoci.name = name
                         alternativeLoci.save(flush: true)
                         render ([success: true] as JSON)
@@ -286,7 +289,7 @@ class AlternativeLociController {
                         def alternativeLoci = alternativeLociService.createInversion(requestObject, organism, sequence)
                         User user = alternativeLociService.getCurrentUser(requestObject)
                         featureService.setOwner(alternativeLoci, user)
-                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type}_${alternativeLoci.dateCreated}"
+                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type.substring(0, 3)}_${dateFormat.format(alternativeLoci.dateCreated)}"
                         alternativeLoci.name = name
                         alternativeLoci.save(flush: true)
                         render ([success: true] as JSON)
@@ -321,7 +324,7 @@ class AlternativeLociController {
                         def alternativeLoci = alternativeLociService.createInsertion(requestObject, organism, sequence)
                         User user = alternativeLociService.getCurrentUser(requestObject)
                         featureService.setOwner(alternativeLoci, user)
-                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type}_${alternativeLoci.dateCreated}"
+                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type.substring(0, 3)}_${dateFormat.format(alternativeLoci.dateCreated)}"
                         alternativeLoci.name = name
                         alternativeLoci.save(flush: true)
                         render ([success: true] as JSON)
@@ -357,7 +360,7 @@ class AlternativeLociController {
                         def alternativeLoci = alternativeLociService.createDeletion(requestObject, organism, sequence)
                         User user = alternativeLociService.getCurrentUser(requestObject)
                         featureService.setOwner(alternativeLoci, user)
-                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type}_${alternativeLoci.dateCreated}"
+                        String name = "${user.username.split("@").first()}_${alternativeLoci.featureLocation.sequence.name}:${alternativeLoci.fmin}-${alternativeLoci.fmax}_${alternativeLoci.type.substring(0, 3)}_${dateFormat.format(alternativeLoci.dateCreated)}"
                         alternativeLoci.name = name
                         alternativeLoci.save(flush: true)
                         render ([success: true] as JSON)
