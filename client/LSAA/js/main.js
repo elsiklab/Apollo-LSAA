@@ -32,24 +32,6 @@ function(
             browser.afterMilestone('initView', function() {
                 browser.renderGlobalMenu('lsaa', { text: 'LSAA' }, browser.menuBar);
 
-                // Correction
-                browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Annotate Correction',
-                    iconClass: 'dijitIconEdit',
-                    onClick: function() {
-                        new LsaaCorrectionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
-                    }
-                }));
-
-                // Inversion
-                browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Annotate Inversion',
-                    iconClass: 'dijitIconUndo',
-                    onClick: function() {
-                        new LsaaInversionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
-                    }
-                }));
-
                 // Insertion
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'Annotate Insertion',
@@ -68,35 +50,50 @@ function(
                     }
                 }));
 
-                // Disabling sequence search until its properly implemented
-                //
-                // browser.addGlobalMenuItem('lsaa', new MenuItem({
-                //     label: 'Search sequence',
-                //     iconClass: 'dijitIconSearch',
-                //     onClick: function() {
-                //         new SequenceSearchDialog({
-                //             browser: thisB.browser,
-                //             contextPath: thisB.contextPath,
-                //             refseq: thisB.browser.refSeq.name,
-                //             successCallback: function(id, fmin, fmax) {
-                //                 console.log('here');
-                //                 var locobj = {
-                //                     ref: id,
-                //                     start: fmin,
-                //                     end: fmax
-                //                 };
-                //                 var highlightSearchedRegions = thisB.browser.config.highlightSearchedRegions;
-                //                 thisB.browser.config.highlightSearchedRegions = true;
-                //                 thisB.browser.showRegionWithHighlight(locobj);
-                //                 thisB.browser.config.highlightSearchedRegions = highlightSearchedRegions;
-                //             },
-                //             errorCallback: function(response) {
-                //                 console.log('erro');
-                //                 console.error(response);
-                //             }
-                //         }).show();
-                //     }
-                // }));
+                // Inversion
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
+                    label: 'Annotate Inversion',
+                    iconClass: 'dijitIconUndo',
+                    onClick: function() {
+                        new LsaaInversionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                    }
+                }));
+
+                // Correction
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
+                    label: 'Annotate Correction',
+                    iconClass: 'dijitIconEdit',
+                    onClick: function() {
+                        new LsaaCorrectionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
+                    }
+                }));
+
+                browser.addGlobalMenuItem('lsaa', new MenuItem({
+                    label: 'Search sequence',
+                    iconClass: 'dijitIconSearch',
+                    onClick: function() {
+                        new SequenceSearchDialog({
+                            browser: thisB.browser,
+                            contextPath: thisB.contextPath,
+                            refseq: thisB.browser.refSeq.name,
+                            successCallback: function(id, fmin, fmax) {
+                                console.log('here');
+                                var locobj = {
+                                    ref: id,
+                                    start: fmin,
+                                    end: fmax
+                                };
+                                var highlightSearchedRegions = thisB.browser.config.highlightSearchedRegions;
+                                thisB.browser.config.highlightSearchedRegions = true;
+                                thisB.browser.showRegionWithHighlight(locobj);
+                                thisB.browser.config.highlightSearchedRegions = highlightSearchedRegions;
+                            },
+                            errorCallback: function(response) {
+                                console.error(response);
+                            }
+                        }).show();
+                    }
+                }));
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'View report',
                     iconClass: 'dijitIconTable',
