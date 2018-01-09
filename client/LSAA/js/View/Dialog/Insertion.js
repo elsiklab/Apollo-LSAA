@@ -50,6 +50,7 @@ define([
                     onClick: function() {
                         var valid = true;
                         var breed = thisB.breed.get('value');
+                        var individual = thisB.individual.get('value');
                         var urlTemplate1 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
                         var urlTemplate2 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
                         var queryUrl;
@@ -114,6 +115,7 @@ define([
                                             sequence: thisB.sequence.get('value'),
                                             description: thisB.description.get('value'),
                                             breed: breed.join('|'),
+                                            individual: individual,
                                             orientation: thisB.orientation.get('value'),
                                             sequenceData: thisB.sequencedata.value,
                                             organism: thisB.browser.config.dataset_id,
@@ -152,7 +154,7 @@ define([
                                         coordinateFormat: "one_based",
                                         sequence: thisB.sequence.get('value'),
                                         description: thisB.description.get('value'),
-                                        breed: breed,
+                                        individual: individual,
                                         orientation: thisB.orientation.get('value'),
                                         sequenceData: thisB.sequencedata.value,
                                         organism: thisB.browser.config.dataset_id,
@@ -204,6 +206,7 @@ define([
                 });
                 this.description = new TextBox({id: 'lsaa_description'});
                 this.breed = new TextBox({id: 'lsaa_breed'});
+                this.individual = new TextBox({id: 'lsaa_individual'});
                 this.sequencedata = dom.create('textarea', { style: { height: '60px', width: '100%' }, id: 'sequencedata' });
                 this.error = dom.create('div', { 'id': 'error', 'class': 'errormsg' });
                 this.coordinateFormat = "one_based";
@@ -216,6 +219,7 @@ define([
                     dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_description', innerHTML: 'Description: ' }), this.description.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_breed', innerHTML: 'Breed: ' }), this.breed.domNode, br(),
+                    dom.create('label', { 'for': 'lsaa_individual', innerHTML: 'Individual: ' }), this.individual.domNode, br(),
                     dom.create('label', { 'for': 'sequencedata', innerHTML: 'Sequence data: ' }), this.sequencedata, br(),
                     this.error, br()
                 ]);

@@ -207,7 +207,7 @@ class ExportDataService {
                 altLociJsonObject.put("source_start", altLoci.startPosition)
                 altLociJsonObject.put("source_end", altLoci.endPosition)
                 altLociJsonObject.put("description", altLoci.description)
-                altLociJsonObject.put("breed", altLoci.breed.nameAndIdentifier)
+                if (altLoci.breed) altLociJsonObject.put("breed", altLoci.breed.nameAndIdentifier)
 
                 if (altLoci.type == AlternativeLociService.TYPE_INVERSION || altLoci.type == AlternativeLociService.TYPE_DELETION) {
                     altLociJsonObject.put("source", genomeFasta)
@@ -253,6 +253,7 @@ class ExportDataService {
                     eq('organism', organism)
                 }
             }
+            isNull("breed")
         }
     }
 

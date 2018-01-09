@@ -31,6 +31,7 @@ class AltLociTrackController {
             size_of_locus (it.featureLocation.fmax - it.featureLocation.fmin)
             size_of_input it.type in ["INVERSION", "DELETION"] ? (it.endPosition - it.startPosition) : (it.endPosition - it.startPosition) + 1
             breed it.breed ? it.breed.nameAndIdentifier : null
+            individual it.individual
             description it.description
             owner it.owner.username
         }

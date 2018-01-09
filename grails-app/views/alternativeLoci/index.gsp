@@ -66,7 +66,7 @@
                             <td>${feature.type in ["INVERSION", "DELETION"] ? (feature.endPosition - feature.startPosition) : (feature.endPosition - feature.startPosition) + 1}</td>
                             <td>${feature.type}</td>
                             <td>${feature.name}</td>
-                            <td>${feature.breed.nameAndIdentifier}</td>
+                            <td>${feature.breed?.nameAndIdentifier}</td>
                             <td>${feature.description}</td>
                             <td>
                                 <g:if env="development">
