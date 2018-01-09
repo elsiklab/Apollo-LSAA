@@ -20,7 +20,7 @@ define([
     ) {
         return declare(ActionBarDialog, {
             autofocus: false,
-            title: 'Create an alternative loci of type Inversion',
+            title: 'Create an alternative locus of type Inversion',
 
             constructor: function(args) {
                 this.browser = args.browser;

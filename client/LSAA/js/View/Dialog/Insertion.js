@@ -23,7 +23,7 @@ define([
 
         return declare(ActionBarDialog, {
             autofocus: false,
-            title: 'Create an alternative loci of type Insertion',
+            title: 'Create an alternative locus of type Insertion',
 
             constructor: function(args) {
                 this.browser = args.browser;
