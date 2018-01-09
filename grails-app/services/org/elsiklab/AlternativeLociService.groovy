@@ -323,12 +323,22 @@ class AlternativeLociService {
             end = jsonObject.getInt("position") - 1
         }
 
-        String breedString = jsonObject.breed
-        String breedIdentifier = breedString.split("\\|")[0]
-        def overlappingAlternativeLoci = AlternativeLoci.executeQuery(
-                "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE a.breed.identifier = :queryBreedIdentifier AND fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
-                [queryBreedIdentifier: breedIdentifier, querySequence: sequenceName, queryFmin: start, queryFmax: end]
-        )
+        def overlappingAlternativeLoci
+        if (jsonObject.containsKey("breed")) {
+            String breedString = jsonObject.breed
+            String breedIdentifier = breedString.split("\\|")[0]
+            overlappingAlternativeLoci = AlternativeLoci.executeQuery(
+                    "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE a.breed.identifier = :queryBreedIdentifier AND fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
+                    [queryBreedIdentifier: breedIdentifier, querySequence: sequenceName, queryFmin: start, queryFmax: end]
+            )
+        }
+        else {
+            overlappingAlternativeLoci = AlternativeLoci.executeQuery(
+                    "SELECT DISTINCT a FROM AlternativeLoci a JOIN a.featureLocations fl WHERE a.breed IS null AND fl.sequence.name = :querySequence AND ((fl.fmin <= :queryFmin AND fl.fmax > :queryFmin) OR (fl.fmin <= :queryFmax AND fl.fmax >= :queryFmax) OR (fl.fmin >= :queryFmin AND fl.fmax <= :queryFmax))",
+                    [querySequence: sequenceName, queryFmin: start, queryFmax: end]
+            )
+        }
+
         return overlappingAlternativeLoci.size() != 0
     }
 

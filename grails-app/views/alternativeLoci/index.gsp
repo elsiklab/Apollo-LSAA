@@ -43,7 +43,7 @@
                         <g:sortableColumn property="organism" title="Organism" params="${filters}"/>
                         <g:sortableColumn property="location" title="Location" params="${filters}"/>
                         <g:sortableColumn property="orientation" title="Orientation" params="${filters}"/>
-                        <g:sortableColumn property="size_of_loci" title="Size of Loci" params="${filters}"/>
+                        <g:sortableColumn property="size_of_locus" title="Size of Loci" params="${filters}"/>
                         <g:sortableColumn property="size_of_input" title="Size of Input" params="${filters}"/>
                         <g:sortableColumn property="type" title="Type" params="${filters}"/>
                         <g:sortableColumn property="name" title="Name" params="${filters}"/>
