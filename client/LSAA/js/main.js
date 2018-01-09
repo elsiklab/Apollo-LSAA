@@ -61,7 +61,7 @@ function(
 
                 // Correction
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Annotate Correction',
+                    label: 'Annotate Other Changes',
                     iconClass: 'dijitIconEdit',
                     onClick: function() {
                         new LsaaCorrectionDialog({ browser: thisB.browser, contextPath: thisB.contextPath }).show();
