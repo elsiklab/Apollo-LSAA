@@ -40,14 +40,15 @@
                         %{--<g:sortableColumn property="id" title="Edit"/>--}%
                         <g:sortableColumn property="created" title="Created" params="${filters}"/>
                         <g:sortableColumn property="owners" title="Owner" params="${filters}"/>
-                        <g:sortableColumn property="organism" title="Organism" params="${filters}"/>
+                        %{--<g:sortableColumn property="organism" title="Organism" params="${filters}"/>--}%
                         <g:sortableColumn property="location" title="Location" params="${filters}"/>
-                        <g:sortableColumn property="orientation" title="Orientation" params="${filters}"/>
-                        <g:sortableColumn property="size_of_locus" title="Size of Loci" params="${filters}"/>
-                        <g:sortableColumn property="size_of_input" title="Size of Input" params="${filters}"/>
+                        %{--<g:sortableColumn property="orientation" title="Orientation" params="${filters}"/>--}%
+                        <g:sortableColumn property="lsaa_length" title="LSAA Length" params="${filters}"/>
+                        <g:sortableColumn property="input_length" title="Input Length" params="${filters}"/>
                         <g:sortableColumn property="type" title="Type" params="${filters}"/>
                         <g:sortableColumn property="name" title="Name" params="${filters}"/>
                         <g:sortableColumn property="breed" title="Breed" params="${filters}"/>
+                        <g:sortableColumn property="individual" title="Individual" params="${filters}"/>
                         <g:sortableColumn property="description" title="Description" params="${filters}"/>
                         <g:sortableColumn property="link" title="Link" params="${filters}"/>
                     </tr>
@@ -59,14 +60,15 @@
                             %{--<td><g:link action="edit" id="${feature.id}">Edit</g:link></td>--}%
                             <td><g:formatDate format="E dd-MMM-yy" date="${feature.dateCreated}"/></td>
                             <td>${feature.owner?.username}</td>
-                            <td>${feature.featureLocation?.sequence?.organism?.commonName}</td>
+                            %{--<td>${feature.featureLocation?.sequence?.organism?.commonName}</td>--}%
                             <td>${feature.featureLocation?.sequence?.name}:${feature.featureLocation.fmin + 1}..${feature.featureLocation.fmax}</td>
-                            <td>${(feature.orientation) == -1 ? 'Reverse' : 'Forward'}</td>
+                            %{--<td>${(feature.orientation) == -1 ? 'Reverse' : 'Forward'}</td>--}%
                             <td>${(feature.featureLocation.fmax - feature.featureLocation.fmin)}</td>
                             <td>${feature.type in ["INVERSION", "DELETION"] ? (feature.endPosition - feature.startPosition) : (feature.endPosition - feature.startPosition) + 1}</td>
                             <td>${feature.type}</td>
                             <td>${feature.name}</td>
                             <td>${feature.breed?.nameAndIdentifier}</td>
+                            <td>${feature.individual}</td>
                             <td>${feature.description}</td>
                             <td>
                                 <g:if env="development">
