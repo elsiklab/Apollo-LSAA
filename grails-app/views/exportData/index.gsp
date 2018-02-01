@@ -45,6 +45,12 @@
             <br/>
             <br/>
             <div>
+                <b>Category:</b>
+                <span id="categoryContainer"></span>
+            </div>
+            <br/>
+            <br/>
+            <div>
                 <b>Breed:</b>
                 <span id="breedContainer"></span>
             </div>
@@ -81,9 +87,16 @@
             </div>
         </div>
     <script>
+
         function updateOrganism(organismId) {
-            jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'exportData/updateOrganism', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
-            //jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganismSequences', success: function(data,textStatus){jQuery('#sequenceContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            if (organismId == 'null') {
+                jQuery("#categoryContainer").html("N/A");
+                resetValue();
+            }
+            else {
+                jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganism', success: function(data,textStatus){jQuery('#categoryContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+                //jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganismSequences', success: function(data,textStatus){jQuery('#sequenceContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+            }
         }
 
         function updateSequences(options) {
@@ -95,6 +108,32 @@
             }
             jQuery.ajax({type:'POST',data: 'selectedSequences=' + selectedSequences.join(','), url:'exportData/updateSequences', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
+
+        function updateCategory(category) {
+            if (category == "null") {
+                resetValue();
+            }
+            else if (category == "Structural Variation") {
+                jQuery.ajax({type:'POST',data: 'category=' + category, url:'updateCategory', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+                resetValue();
+            }
+            else {
+                jQuery.ajax({
+                    type:'POST',
+                    data: 'category=' + category,
+                    url:'updateCategory',
+                    success: function(data,textStatus){
+                        jQuery('#altLociContainer').html(data.replace('<html>','').replace('</html>',''));
+                    },
+                    error: function(XMLHttpRequest,textStatus,errorThrown){
+
+                    }
+                });
+                jQuery("#breedContainer").html("N/A");
+            }
+
+        }
+
         function updateBreed(breedId) {
             jQuery.ajax({type:'POST',data:'breedId=' + breedId, url:'exportData/updateBreed', success: function(data,textStatus){jQuery('#altLociContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
         }
@@ -111,6 +150,12 @@
             jQuery('#breedContainer').html("N/A");
             jQuery('#altLociContainer').html("N/A");
         }
+
+        function updateSelection(value) {
+            console.log("updateSelection: " , value);
+            jQuery.ajax({type:'POST',data:'selectedAlternativeLoci=' + value, url:'updateSelectionForExport'});
+        }
+
     </script>
     </body>
 </html>

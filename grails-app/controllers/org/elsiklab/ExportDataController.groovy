@@ -148,7 +148,7 @@ class ExportDataController {
     }
 
     def updateOrganism() {
-        log.debug "${params.toString()}"
+        log.debug "updateOrganism: ${params.toString()}"
         if (params.get("organismId") == "null") {
             render "N/A"
         }
@@ -157,12 +157,16 @@ class ExportDataController {
             Organism organism = Organism.findById(organismId)
             selectedOrganism = organism
 
-            def breeds = Breed.findAllByOrganism(organism)
-            log.debug "breeds: ${breeds.size()}"
+//            def breeds = Breed.findAllByOrganism(organism)
+//            log.debug "breeds: ${breeds.size()}"
 
-            render g.select(id:'breeds', name:'breed.id',
-                    from:breeds, optionKey:'id', optionValue: "nameAndIdentifier", noSelection:[null:'Select a breed'], onchange: "updateBreed(this.value)"
+            def categories = ['Assembly Correction', 'Structural Variation']
+            render g.select(id: 'categories', name: 'category',
+                        from: categories, noSelection:[null:'Select a category'], onchange: "updateCategory(this.value)"
             )
+//            render g.select(id:'breeds', name:'breed.id',
+//                    from:breeds, optionKey:'id', optionValue: "nameAndIdentifier", noSelection:[null:'Select a breed'], onchange: "updateBreed(this.value)"
+//            )
         }
     }
 
@@ -180,6 +184,33 @@ class ExportDataController {
         )
     }
 
+    def updateCategory() {
+        log.debug "params: ${params.toString()}"
+        String category = params.get("category")
+        log.debug "Category: ${category}"
+
+        if (category == "Structural Variation") {
+            def breeds = Breed.findAllByOrganism(selectedOrganism)
+            render g.select(id:'breeds', name:'breed.id',
+                    from:breeds, optionKey:'id', optionValue: "nameAndIdentifier", noSelection:[null:'Select a breed'], onchange: "updateBreed(this.value)"
+            )
+        }
+        else {
+            def alternativeLociList = AlternativeLoci.findAllByBreed(null)
+            if (alternativeLociList.size() > 0) {
+                // return a table instead of a g.select
+                println "Alt loci list: ${alternativeLociList}"
+                println "Calling render";
+                render g.select(id: 'alternativeLociList', name: 'alternativeLoci.id', multiple: 'multiple',
+                        from: alternativeLociList, optionKey: 'id', optionValue: 'name', noSelection: [All: 'All'], onchange: "updateAlternativeLoci(this.options)"
+                )
+            }
+            else {
+                render "N/A"
+            }
+        }
+    }
+
     def updateBreed() {
         log.debug "params: ${params.toString()}"
         if (params.get("breedId") == "null") {
@@ -194,6 +225,7 @@ class ExportDataController {
             log.debug "alternativeLociList size: ${alternativeLociList.size()}"
 
             if (alternativeLociList.size() > 0) {
+                // return a table instead of a g.select
                 render g.select(id: 'alternativeLociList', name: 'alternativeLoci.id', multiple: 'multiple',
                         from: alternativeLociList, optionKey: 'id', optionValue: 'name', noSelection: [All: 'All'], onchange: "updateAlternativeLoci(this.options)"
                 )
@@ -220,7 +252,7 @@ class ExportDataController {
     }
 
     def updateAlternativeLoci() {
-        log.debug "params: ${params.toString()}"
+        println "uAL: params: ${params.toString()}"
         String selectedAlternativeLoci = params.selectedAlternativeLoci
         selectedAlternativeLociList = []
         if (selectedAlternativeLoci != "All") {
