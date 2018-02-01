@@ -94,7 +94,7 @@
                 resetValue();
             }
             else {
-                jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganism', success: function(data,textStatus){jQuery('#categoryContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+                jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'exportData/updateOrganism', success: function(data,textStatus){jQuery('#categoryContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
                 //jQuery.ajax({type:'POST',data:'organismId=' + organismId, url:'updateOrganismSequences', success: function(data,textStatus){jQuery('#sequenceContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
             }
         }
@@ -114,14 +114,14 @@
                 resetValue();
             }
             else if (category == "Structural Variation") {
-                jQuery.ajax({type:'POST',data: 'category=' + category, url:'updateCategory', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
+                jQuery.ajax({type:'POST',data: 'category=' + category, url:'exportData/updateCategory', success: function(data,textStatus){jQuery('#breedContainer').html(data);},error:function(XMLHttpRequest,textStatus,errorThrown){}});
                 resetValue();
             }
             else {
                 jQuery.ajax({
                     type:'POST',
                     data: 'category=' + category,
-                    url:'updateCategory',
+                    url:'exportData/updateCategory',
                     success: function(data,textStatus){
                         jQuery('#altLociContainer').html(data.replace('<html>','').replace('</html>',''));
                     },
