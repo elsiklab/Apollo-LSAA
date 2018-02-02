@@ -39,7 +39,7 @@
                 <g:select id="organism" name="organism.commonName" from="${Organism.listOrderByCommonName()}"
                           optionKey="id"
                           optionValue="commonName"
-                          noSelection="[null:'Select an organism']"
+                          noSelection="[null:'Select an assembly']"
                           onchange="updateOrganism(this.value)" />
             </div>
             <br/>
