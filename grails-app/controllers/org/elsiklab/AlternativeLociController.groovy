@@ -28,32 +28,48 @@ class AlternativeLociController {
     public static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss")
 
     def index(Integer max) {
+
         if (alternativeLociService.getCurrentUser()) {
             params.max = Math.min(max ?: 20, 100)
 
-            def c = Feature.createCriteria()
+            def c = AlternativeLoci.createCriteria()
 
             def list = c.list(max: params.max, offset:params.offset) {
 
+                if(params.sort == 'created') {
+                    order('dateCreated', params.order)
+                }
                 if(params.sort == 'owners') {
                     owners {
                         order('username', params.order)
                     }
                 }
-                if(params.sort == 'sequencename') {
+                if(params.sort == 'location') {
                     featureLocations {
                         sequence {
                             order('name', params.order)
                         }
+                        order('fmin', params.order)
                     }
                 }
-                else if(params.sort == 'name') {
+                if(params.sort == 'type') {
+                    order('type', params.order)
+                }
+                if(params.sort == 'name') {
                     order('name', params.order)
                 }
-                else if(params.sort == 'cvTerm') {
-                    order('class', params.order)
+                if(params.sort == 'breed') {
+                    breed {
+                        order('name', params.order)
+                    }
                 }
-                else if(params.sort == 'organism') {
+                if(params.sort == 'individual') {
+                    order('individual', params.order)
+                }
+                if(params.sort == 'description') {
+                    order('description', params.order)
+                }
+                if(params.sort == 'organism') {
                     featureLocations {
                         sequence {
                             organism {
@@ -62,25 +78,23 @@ class AlternativeLociController {
                         }
                     }
                 }
-                else if(params.sort == 'lastUpdated') {
-                    order('lastUpdated', params.order)
-                }
 
-                if(params.ownerName != null && params.ownerName != '') {
-                    owners {
-                        ilike('username', '%' + params.ownerName + '%')
-                    }
-                }
-                if(params.organismName != null && params.organismName != '') {
-                    featureLocations {
-                        sequence {
-                            organism {
-                                ilike('commonName', '%' + params.organismName + '%')
-                            }
-                        }
-                    }
-                }
-                'eq'('class', AlternativeLoci.class.name)
+                // snippet for filtering results
+//                if(params.ownerName != null && params.ownerName != '') {
+//                    owners {
+//                        ilike('username', '%' + params.ownerName + '%')
+//                    }
+//                }
+//                if(params.organismName != null && params.organismName != '') {
+//                    featureLocations {
+//                        sequence {
+//                            organism {
+//                                ilike('commonName', '%' + params.organismName + '%')
+//                            }
+//                        }
+//                    }
+//                }
+
             }
             log.debug list.toString()
             render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
