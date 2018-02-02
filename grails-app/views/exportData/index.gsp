@@ -35,7 +35,7 @@
             </g:if>
             <br/>
             <div class="left">
-                <b>Organism:</b>
+                <b>Assembly:</b>
                 <g:select id="organism" name="organism.commonName" from="${Organism.listOrderByCommonName()}"
                           optionKey="id"
                           optionValue="commonName"
