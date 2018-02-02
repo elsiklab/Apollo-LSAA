@@ -67,24 +67,24 @@ class BlatCommandLine {
         }
 
         // Using only .2bit for BLAT
-        log.debug "Running BLAT to create TAB: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputArg} -out=blast8"
+        println "Running BLAT to create TAB: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputArg} -out=blast8"
         ("${command} ${databaseArg}:${databaseId} ${queryArg} ${outputArg} -out=blast8").execute().waitForProcessOutput(System.out, System.err)
-        log.debug "Running BLAT to create PSL: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputPsl}"
+        println "Running BLAT to create PSL: ${command} ${databaseArg}:${databaseId} ${queryArg} ${outputPsl}"
         ("${command} ${databaseArg}:${databaseId} ${queryArg} ${outputPsl}").execute().waitForProcessOutput(System.out, System.err)
-        log.debug "Parsing PSL to GFF3: ${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}"
+        println "Parsing PSL to GFF3: ${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}"
         def gffContent = ("${gffFormatter} -f psl  -m -ver 3 -t hit -i ${outputPsl}").execute().text
-        log.debug "Results as GFF3:\n ${gffContent}"
+        println "Results as GFF3:\n ${gffContent}"
         new File(outputGff).withWriterAppend('UTF-8') { it.write(gffContent) }
         ['flatfile-to-json.pl', '--config', $/{"glyph":"JBrowse/View/FeatureGlyph/Box"}/$,'--clientConfig',$/{"color":"function(feature){return(feature.get('strand')==-1?'blue':'red');}"}/$, '--trackType', 'JBrowse/View/Track/CanvasFeatures', '--trackLabel', "${dir.name}", '--gff', "${outputGff}", '--out', "${outputDir}"].execute().waitForProcessOutput(System.out, System.err)
 
-        def timer = new Timer()
-        def outputPath = outputDir
-        // schedule a task to run after 2 minutes
-        // TODO: make this configurable
-        def task = timer.runAfter(120 * 1000) {
-            log.info "removing track: ${dir.name}"
-            ("remove-track.pl --trackLabel ${dir.name} --out ${outputPath} --delete").execute().waitForProcessOutput(System.out, System.err)
-        }
+//        def timer = new Timer()
+//        def outputPath = outputDir
+//        // schedule a task to run after 2 minutes
+//        // TODO: make this configurable
+//        def task = timer.runAfter(120 * 1000) {
+//            println "removing track: ${dir.name}"
+//            ("remove-track.pl --trackLabel ${dir.name} --out ${outputPath} --delete").execute().waitForProcessOutput(System.out, System.err)
+//        }
 
         Collection<BlastAlignment> matches = new ArrayList<BlastAlignment>()
         new File(outputArg).eachLine { line ->
