@@ -68,44 +68,45 @@ function(
                     }
                 }));
 
-                browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'Search sequence',
-                    iconClass: 'dijitIconSearch',
-                    onClick: function() {
-                        new SequenceSearchDialog({
-                            browser: thisB.browser,
-                            contextPath: thisB.contextPath,
-                            refseq: thisB.browser.refSeq.name,
-                            successCallback: function(id, fmin, fmax) {
-                                console.log('here');
-                                var locobj = {
-                                    ref: id,
-                                    start: fmin,
-                                    end: fmax
-                                };
-                                var highlightSearchedRegions = thisB.browser.config.highlightSearchedRegions;
-                                thisB.browser.config.highlightSearchedRegions = true;
-                                thisB.browser.showRegionWithHighlight(locobj);
-                                thisB.browser.config.highlightSearchedRegions = highlightSearchedRegions;
-                            },
-                            errorCallback: function(response) {
-                                console.error(response);
-                            }
-                        }).show();
-                    }
-                }));
+                // browser.addGlobalMenuItem('lsaa', new MenuItem({
+                //     label: 'Search sequence',
+                //     iconClass: 'dijitIconSearch',
+                //     onClick: function() {
+                //         new SequenceSearchDialog({
+                //             browser: thisB.browser,
+                //             contextPath: thisB.contextPath,
+                //             refseq: thisB.browser.refSeq.name,
+                //             successCallback: function(id, fmin, fmax) {
+                //                 console.log('here');
+                //                 var locobj = {
+                //                     ref: id,
+                //                     start: fmin,
+                //                     end: fmax
+                //                 };
+                //                 var highlightSearchedRegions = thisB.browser.config.highlightSearchedRegions;
+                //                 thisB.browser.config.highlightSearchedRegions = true;
+                //                 thisB.browser.showRegionWithHighlight(locobj);
+                //                 thisB.browser.config.highlightSearchedRegions = highlightSearchedRegions;
+                //             },
+                //             errorCallback: function(response) {
+                //                 console.error(response);
+                //             }
+                //         }).show();
+                //     }
+                // }));
+                
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'View report',
                     iconClass: 'dijitIconTable',
                     onClick: function() {
-                        window.open(thisB.contextPath + '/../alternativeLoci');
+                        window.open(thisB.contextPath + '/../alternativeLoci' + '?organismId=' + browser.config.dataset_id);
                     }
                 }));
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'Export LSAA',
                     iconClass: 'dijitIconSave',
                     onClick: function() {
-                        window.open(thisB.contextPath + '/../exportData');
+                        window.open(thisB.contextPath + '/../exportData' + '?organismId=' + browser.config.dataset_id);
                     }
                 }));
             });

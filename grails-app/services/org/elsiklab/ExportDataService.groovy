@@ -296,6 +296,7 @@ class ExportDataService {
      */
     def getTransformationAsFasta(Organism organism, Breed breed, ArrayList<AlternativeLoci> altLociList, boolean exportEntireGenome = false) {
         log.debug "organism ${organism.commonName} breed: ${breed} altLociList: ${altLociList.size()}"
+        log.debug "${grailsApplication.config.lsaa.exportDirectory} + ${File.separator} + ${UUID.randomUUID()} + ${FastaFileService.FA_SUFFIX}"
         def transformedFastaMap = [:]
         def fastaFile = buildSequence(organism, altLociList, exportEntireGenome)
         transformedFastaMap.put(organism.id, fastaFile.getCanonicalPath())
@@ -307,8 +308,11 @@ class ExportDataService {
      * @param altLociList
      * @return
      */
+
+     
     def buildSequence(Organism organism, def altLociList, boolean exportEntireGenome = false) {
-        String fileName = grailsApplication.config.lsaa.exportDirectory + File.separator + UUID.randomUUID() + FastaFileService.FA_SUFFIX
+        log.debug "${grailsApplication.config.lsaa.exportDirectory} + ${File.separator} + ${UUID.randomUUID()} + ${FastaFileService.FA_SUFFIX}"
+        String fileName = grailsApplication.config.lsaa.exportDirectory.toString() + File.separator.toString() + UUID.randomUUID().toString() + FastaFileService.FA_SUFFIX.toString()
         def fastaFile = new File(fileName)
         def sequenceToAltLociMap = [:]
         def timer = new Timer()

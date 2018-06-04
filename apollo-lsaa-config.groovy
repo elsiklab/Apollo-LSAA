@@ -33,6 +33,9 @@ environments {
 // can use full paths to blat or bp_search2gff.pl if not in path
 lsaa {
     bootstrap = true
+    exportDirectory = [
+        dir: '/tmp'
+    ]
     sequence_search_tools = [
         blat_nuc: [
             search_exe: 'blat',
@@ -41,7 +44,7 @@ lsaa {
             params: '',
             gff_exe: 'bp_search2gff.pl',
             tmp_dir: '/tmp',
-            removeTmpDir: false
+            removeTmpDir: false,
         ],
         blat_prot: [
             search_exe: 'blat',

@@ -80,23 +80,23 @@ class AlternativeLociController {
                 }
 
                 // snippet for filtering results
-//                if(params.ownerName != null && params.ownerName != '') {
-//                    owners {
-//                        ilike('username', '%' + params.ownerName + '%')
-//                    }
-//                }
-//                if(params.organismName != null && params.organismName != '') {
-//                    featureLocations {
-//                        sequence {
-//                            organism {
-//                                ilike('commonName', '%' + params.organismName + '%')
-//                            }
-//                        }
-//                    }
-//                }
+               // if(params.ownerName != null && params.ownerName != '') {
+               //     owners {
+               //         ilike('username', '%' + params.ownerName + '%')
+               //     }
+               // }
+               // if(params.organismName != null && params.organismName != '') {
+               //     featureLocations {
+               //         sequence {
+               //             organism {
+               //                 ilike('commonName', '%' + params.organismName + '%')
+               //             }
+               //         }
+               //     }
+               // }
 
             }
-            log.debug list.toString()
+            // log.debug list.toString()
             render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
         }
         else {
