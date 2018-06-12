@@ -145,7 +145,8 @@
                                 <th>Selected</th>
                                 <g:sortableColumn property="created" title="Created" params="${params}"/>
                                 <g:sortableColumn property="owners" title="Owner" params="${params}"/>
-                                <g:sortableColumn property="organismId" title="Organism" params="${params}"/>
+                                %{--<g:sortableColumn property="organismId" title="Organism" params="${params}"/>--}%
+                                <th>Organism</th>
                                 <g:sortableColumn property="location" title="Location" params="${params}"/>
                                 %{--<g:sortableColumn property="orientation" title="Orientation" params="${params}"/>--}%
                                 <g:sortableColumn property="lsaa_length" title="LSAA Length" params="${params}"/>

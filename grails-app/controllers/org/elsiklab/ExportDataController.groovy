@@ -40,10 +40,12 @@ class ExportDataController {
 
                 // eq('type', params.type)
 
-                // eq('breed', params.breed)
+                // eq('breed', params.breed)\
+
+                // log.debug "\n\n\n\nindividual ${params.individual} ${params.individual == 'all'}\n\n\n\n\n"
                 and {
                     
-                    if(params.individual != null){
+                    if(params.individual != null && params.individual != 'all'){
                         'in'('individual', params.individual)
                     }
 
