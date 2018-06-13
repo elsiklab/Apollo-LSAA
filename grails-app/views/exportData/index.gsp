@@ -171,6 +171,7 @@
                                             value="${feature.uniqueName}" 
                                             data-sequence="${feature.featureLocation?.sequence?.name}"
                                             data-location="[${feature.endPosition},${feature.startPosition}]"
+                                            data-breed="${feature.breed?.nameAndIdentifier}"
                                             class="selector"/>
                                     </td>
                                     <td><g:formatDate format="E dd-MMM-yy" date="${feature.dateCreated}"/></td>

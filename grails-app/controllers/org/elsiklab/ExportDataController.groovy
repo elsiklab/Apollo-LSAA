@@ -141,7 +141,7 @@ class ExportDataController {
 
             selectedOrganism = Organism.findById(params.organismId)
 
-            selectedBreed = Breed.findByName(params.breed)
+            // selectedBreed = Breed.findByName(params.breed)
 
             //             {  
             //    [  
@@ -380,42 +380,50 @@ class ExportDataController {
 
 
 
-
         def criteria = AlternativeLoci.createCriteria()
 
         def list = criteria.list() {
             'in'('uniqueName', params.selection)
         }
 
-        log.debug "organism: ${selectedOrganism.toString()} breed: ${selectedBreed.toString()} list: ${list.toString()} params: ${params.toString()}"
 
         if (selectedOrganism) {
 
-            def transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
-            
+
+            if(list.breed.name == null){
+                log.debug "\n\n\norganism: ${selectedOrganism.toString()} list: ${list.toString()} params: ${params.toString()}\n\n\n"
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, exportEntireGenome)
+            } else {
+                selectedBreed = Breed.findByName(list.breed.name)
+                log.debug "\n\n\norganism: ${selectedOrganism.toString()} breed: ${selectedBreed.toString()} list: ${list.toString()} params: ${params.toString()}\n\n\n"
+                def transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
+            }
+
+
             response.contentType = 'text/plain'
+
             if (params.download == 'download') {
                 response.setHeader("Content-disposition", "attachment;filename=output.fasta")
             }
 
             File file = new File(transformedFastaMap.get(selectedOrganism.id))
+
             if (file) {
                 response.outputStream << file.bytes
-            }
-            else {
+            } else {
                 render ([error: "Cannot find file"] as JSON)
             }
 
         //     def transformedFastaMap
-        //     if (selectedAlternativeLociList.size() > 0) {
-        //         transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, selectedAlternativeLociList, exportEntireGenome)
-        //     }
-        //     else if (selectedBreed) {
-        //         transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, exportEntireGenome)
-        //     }
-        //     else {
-        //         transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, exportEntireGenome)
-        //     }
+            // if (selectedAlternativeLociList.size() > 0) {
+            //     transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, selectedAlternativeLociList, exportEntireGenome)
+            // }
+            // else if (selectedBreed) {
+            //     transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, exportEntireGenome)
+            // }
+            // else {
+            //     transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, exportEntireGenome)
+            // }
         //     log.debug "Transformed FASTA map: ${transformedFastaMap.toString()}"
 
         //     response.contentType = 'text/plain'
