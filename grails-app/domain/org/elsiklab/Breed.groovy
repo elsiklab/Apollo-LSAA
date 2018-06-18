@@ -5,8 +5,8 @@ import org.bbop.apollo.Organism
 class Breed {
 
     static constraints = {
-        name nullable: true
-        identifier nullable: false
+        name nullable: false
+        identifier nullable: true
     }
 
     static transients = [ 'nameAndIdentifier' ]
