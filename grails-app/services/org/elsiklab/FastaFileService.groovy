@@ -23,7 +23,7 @@ class FastaFileService {
      * @return
      */
     def generateFastaIndex(String fileName) {
-        log.debug "fileName: ${fileName}"
+        log.debug "boft fileName: ${fileName}"
         Path filePath = Paths.get(fileName)
         FastaSequenceIndex index = FastaSequenceIndexCreator.buildFromFasta(filePath)
         log.debug "index created"
@@ -76,7 +76,7 @@ class FastaFileService {
      * @return
      */
     def readIndexedFastaRegion(String fastaFile, String sequenceName, Integer start, Integer end, boolean reverse = false) {
-        println "fastaFile: ${fastaFile} ${sequenceName}:${start}-${end}"
+        println "START END fastaFile: ${fastaFile} ${sequenceName}:${start}-${end}"
         def indexedFasta
         try {
             indexedFasta = new IndexedFastaSequenceFile(new File(fastaFile))

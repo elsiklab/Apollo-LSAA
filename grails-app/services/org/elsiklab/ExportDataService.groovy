@@ -159,6 +159,7 @@ class ExportDataService {
      */
     def getTransformationAsJson(Sequence sequence, def altLociList) {
         log.debug "generate transformation JSON for ${sequence.name} and ${altLociList.size()} loci"
+        log.debug "\n\n Grand Designs: ${sequence.organism.directory} + ${File.separator} + ${sequence.organism.genomeFasta}\n\n"
         JSONArray transformationArray = new JSONArray()
         def previousAltLoci
         int previousAltLociFmax
@@ -316,6 +317,7 @@ class ExportDataService {
         def fastaFile = new File(fileName)
         def sequenceToAltLociMap = [:]
         def timer = new Timer()
+        // deletes file after x time
         def task = timer.runAfter(120 * 1000) {
             log.debug"removing ${fastaFile.getCanonicalPath()}"
             fastaFile.delete()

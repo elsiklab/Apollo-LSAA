@@ -389,24 +389,28 @@ class ExportDataController {
 
         if (selectedOrganism) {
 
+            def transformedFastaMap = [:]
 
             if(list.breed.name == null){
                 log.debug "\n\n\norganism: ${selectedOrganism.toString()} list: ${list.toString()} params: ${params.toString()}\n\n\n"
-                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, exportEntireGenome)
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, false)
             } else {
                 selectedBreed = Breed.findByName(list.breed.name)
                 log.debug "\n\n\norganism: ${selectedOrganism.toString()} breed: ${selectedBreed.toString()} list: ${list.toString()} params: ${params.toString()}\n\n\n"
-                def transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
+                transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
             }
 
-
+            log.debug transformedFastaMap.dump()
+            
             response.contentType = 'text/plain'
 
             if (params.download == 'download') {
                 response.setHeader("Content-disposition", "attachment;filename=output.fasta")
             }
 
-            File file = new File(transformedFastaMap.get(selectedOrganism.id))
+            log.debug "ORDID: ${selectedOrganism.id}, BREEDID: ${list.breed.name}"
+            File file = new File(transformedFastaMap.getAt(selectedOrganism.id))
+            // File file = new File(transformedFastaMap.get(selectedOrganism.id))
 
             if (file) {
                 response.outputStream << file.bytes
