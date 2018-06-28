@@ -106,7 +106,7 @@
                     </g:form>
 
                 </div>
-                
+
                 <g:form action="export">
                     <div>
                         <h3>Export Table</h3>
@@ -123,11 +123,11 @@
 
                             <g:hiddenField value="${params.type}" name="type" />
 
-                            <g:hiddenField value="${params.breed}" name="breed"/> 
+                            <g:hiddenField value="${params.breed}" name="breed"/>
 
-                            <g:hiddenField value="${params.individual}" name="individual" /> 
-                            
-                            <g:hiddenField value="${params.owner}" name="owner" /> 
+                            <g:hiddenField value="${params.individual}" name="individual" />
+
+                            <g:hiddenField value="${params.owner}" name="owner" />
 
                             %{--<div>--}%
                                 %{--<br/>--}%
@@ -166,12 +166,12 @@
                                     <td>
                                         %{--<g:checkBox name="${feature.id}" value="false"/>--}%
                                         %{--<g:checkBox name="${feature.name}" value="${false}" />--}%
-                                        <input type="checkbox" 
-                                            name="selection" 
-                                            value="${feature.uniqueName}" 
+                                        <input type="checkbox"
+                                            name="selection"
+                                            value="${feature.uniqueName}"
                                             data-sequence="${feature.featureLocation?.sequence?.name}"
                                             data-location="[${feature.endPosition},${feature.startPosition}]"
-                                            data-breed="${feature.breed?.nameAndIdentifier}"
+                                            data-breed="${feature.breed?.nameAndIdentifier ? feature.breed?.nameAndIdentifier : 'none'}"
                                             class="selector"/>
                                     </td>
                                     <td><g:formatDate format="E dd-MMM-yy" date="${feature.dateCreated}"/></td>
@@ -213,107 +213,140 @@
         $(document).ready(function(){
             // uncheck all selected
 
-            $('input[type=checkbox].selector').prop('checked', false)
+            $('input[type=checkbox].selector').prop('checked', false);
 
-            var enabled = false
+            var enabled = false;
 
-            var sequences = {}
+            var sequences = {};
+
+            var breed = null;
 
             $('input[type=checkbox].selector').on('click', function(event, selector){
                 var seq = $(this).data('sequence');
                 var loc = $(this).data('location');
-
-                // make sure we're in lower to upper ranges
-                if(loc[0] > loc[1]){
-                    var tmp = loc[0]
-                    loc[0] = loc[1]
-                    loc[1] = tmp
-                }
-
-                if(sequences.hasOwnProperty(seq)){
-                    var toAdd = true
-                    for( var seq in sequences ){
-                        //if the sequence is in another sequence
-                        if(    loc[0] <= sequences[seq][0] 
-                            && loc[1] >= sequences[seq][0]
-                            && loc[1] <= sequences[seq][1]){
-                            toAdd = false
-                        }
-                        //if the sequence is in another sequence
-                        if(    loc[0] >= sequences[seq][0] 
-                            && loc[0] <= sequences[seq][0]
-                            && loc[1] >= sequences[seq][1]){
-                            toAdd = false
-                        }
-                        // or a selected sequence is in this sequence
-                        if(    loc[0] >= sequences[seq][0] 
-                            && loc[1] <= sequences[seq][1]){
-                            toAdd = false
-                        }
-                        // or a selected sequence is in this sequence
-                        if(    loc[0] <= sequences[seq][0] 
-                            && loc[1] >= sequences[seq][1]){
-                            toAdd = false
-                        }
+                var brd = $(this).data('breed');
+                // if it's already checked
+                if(!$(this).prop('checked')){
+                    // find how many checks we have
+                    var checked = $('input[type=checkbox].selector:checked').length;
+                    // if this is the last one, remove the breed
+                    if(checked === 0){
+                        breed = null
+                        $('input[type=checkbox]').prop('disabled', false);
                     }
 
-                    if(!toAdd){
-                        alert("Cannot add a sequence that intersects with another sequence")
-                        console.log("Cannot add a sequence that intersects with another sequence")
-                        $(selector).prop('checked', false)
-                    }
-
-
-                    // console.log($('input[type=checkbox].selector:checked'), $('input[type=checkbox].selector:checked').length, checked)
-                    
-
+                    $(selector).prop('checked', false);
                 } else {
-                    sequences[seq] = [loc]
-                }
+                    // select the breed if we dont' have one
+                    if(breed === null){
+                        breed = brd
 
-                $(selector).prop('checked', !($(selector).prop('checked')) );
+                        $('input[type=checkbox]').each(function(count, checkbox){
+                            var checkboxBreed = $(checkbox).data('breed');
+                            if(checkboxBreed !== breed){
+                                $(checkbox).prop('disabled', true);
+                            }
+                        });
+
+                    }
+                    // check that we're only selecting the correct breed
+                    if(breed === brd){
+                        // make sure we're in lower to upper ranges
+                        if(loc[0] > loc[1]){
+                            var tmp = loc[0];
+                            loc[0] = loc[1];
+                            loc[1] = tmp;
+                        }
+
+                        if(sequences.hasOwnProperty(seq)){
+                            var toAdd = true
+                            for( var seq in sequences ){
+                                //if the sequence is in another sequence
+                                if(    loc[0] <= sequences[seq][0]
+                                    && loc[1] >= sequences[seq][0]
+                                    && loc[1] <= sequences[seq][1]){
+                                    toAdd = false;
+                                }
+                                //if the sequence is in another sequence
+                                if(    loc[0] >= sequences[seq][0]
+                                    && loc[0] <= sequences[seq][0]
+                                    && loc[1] >= sequences[seq][1]){
+                                    toAdd = false;
+                                }
+                                // or a selected sequence is in this sequence
+                                if(    loc[0] >= sequences[seq][0]
+                                    && loc[1] <= sequences[seq][1]){
+                                    toAdd = false;
+                                }
+                                // or a selected sequence is in this sequence
+                                if(    loc[0] <= sequences[seq][0]
+                                    && loc[1] >= sequences[seq][1]){
+                                    toAdd = false;
+                                }
+                            }
+
+                            if(!toAdd){
+                                alert("Cannot add a sequence that intersects with another sequence")
+                                // console.log("Cannot add a sequence that intersects with another sequence")
+                                $(selector).prop('checked', false);
+                            }
+
+
+                            // console.log($('input[type=checkbox].selector:checked'), $('input[type=checkbox].selector:checked').length, checked)
+
+
+                        } else {
+                            sequences[seq] = [loc];
+                        }
+
+                        $(selector).prop('checked', true);
+                    }
+
+                }
 
                 var checked = $('input[type=checkbox].selector:checked').length > 0;
-                $('#export-data').prop('disabled', !checked)
+
+                $('#export-data').prop('disabled', !checked);
 
             })
 
         })
         /*
-                loc = [1, 20]
-        sequences = { bob: [11, 12] }
-        var toAdd = true
-        for( seq in sequences ){
+            loc = [1, 20]
+            sequences = { bob: [11, 12] }
+            var toAdd = true
+            for( seq in sequences ){
 
-            //if the sequence is in another sequence
-            if(    loc[0] <= sequences[seq][0] 
-                && loc[1] >= sequences[seq][0]
-                && loc[1] <= sequences[seq][1]){
-                toAdd = false
-            }
-            //if the sequence is in another sequence
-            if(    loc[0] >= sequences[seq][0] 
-                && loc[0] <= sequences[seq][0]
-                && loc[1] >= sequences[seq][1]){
-                toAdd = false
-            }
-            // or a selected sequence is in this sequence
-            if(    loc[0] >= sequences[seq][0] 
-                && loc[1] <= sequences[seq][1]){
-                toAdd = false
-            }
-          
-              // or a selected sequence is in this sequence
-            if(    loc[0] <= sequences[seq][0] 
-                && loc[1] >= sequences[seq][1]){
-                toAdd = false
+                //if the sequence is in another sequence
+                if(    loc[0] <= sequences[seq][0] 
+                    && loc[1] >= sequences[seq][0]
+                    && loc[1] <= sequences[seq][1]){
+                    toAdd = false
+                }
+                //if the sequence is in another sequence
+                if(    loc[0] >= sequences[seq][0] 
+                    && loc[0] <= sequences[seq][0]
+                    && loc[1] >= sequences[seq][1]){
+                    toAdd = false
+                }
+                // or a selected sequence is in this sequence
+                if(    loc[0] >= sequences[seq][0] 
+                    && loc[1] <= sequences[seq][1]){
+                    toAdd = false
+                }
+              
+                  // or a selected sequence is in this sequence
+                if(    loc[0] <= sequences[seq][0] 
+                    && loc[1] >= sequences[seq][1]){
+                    toAdd = false
+                }
+
             }
 
-        }
-
-        if(!toAdd){
-            console.log("Cannot add a sequence that intersects with another sequence")
-        }*/
+            if(!toAdd){
+                console.log("Cannot add a sequence that intersects with another sequence")
+            }
+        */
 
 
     </script>
