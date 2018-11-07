@@ -42,17 +42,18 @@
                 <div>${features}</div>
                 <div>${features*.breed?.unique()}</div>
                 --}%
+                <h3>${(features*.featureLocation?.sequence?.organism?.unique().commonName)[0]}</h3>
                 <div class="controls">
                     <h3>Filter Table</h3>
                     <g:form method="get" controller="exportData">
-                        <label>Organism</label>
+<!--                         <label>Organism</label>
                         <g:select  id="organism" 
                                     value="${params.organismId}"
                                     name="organismId" 
                                     from="${features*.featureLocation?.sequence?.organism?.unique()}"
                                     optionValue="commonName"
                                     optionKey="id"
-                                    />
+                                    /> -->
                         <label>Type</label>
                         <g:select  id="type" 
                                     value="${params.type}"
@@ -102,6 +103,7 @@
 
                         --}% 
                         -->
+                        <g:hiddenField name="organismId" value="${params.organismId}" />
                         <g:actionSubmit value="Filter" action="index" />
                     </g:form>
 

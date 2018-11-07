@@ -28,15 +28,17 @@ class ExportDataController {
 
             def criteria = AlternativeLoci.createCriteria()
 
+            selectedOrganism = Organism.findById(params.organismId)
+
             def list = criteria.list() {
 
-                // featureLocations {
-                //     sequence {
-                //         organism {
-                //             eq('id', params.organismId.toLong())
-                //         }
-                //     }
-                // }
+                featureLocations {
+                    sequence {
+                        organism {
+                            eq('id', params.organismId.toLong())
+                        }
+                    }
+                }
 
                 // eq('type', params.type)
 
@@ -44,7 +46,7 @@ class ExportDataController {
 
                 // log.debug "\n\n\n\nindividual ${params.individual} ${params.individual == 'all'}\n\n\n\n\n"
                 and {
-                    
+
                     if(params.individual != null && params.individual != 'all'){
                         'in'('individual', params.individual)
                     }
@@ -69,6 +71,19 @@ class ExportDataController {
                         'in'('ontologyId', params.chromosome)
                     }
 
+                    // if(params.organismId && params.organismId != 'all'){
+                    //     featureLocation {
+                    //         sequence {
+                    //             'in'order('organism', params.organismId)
+                    //         }
+                    //     }
+                    // }
+                    // featureLocations {
+                    //     sequence {
+                    //         'eq'('organism', params.organismId)
+                    //     }
+                    // }
+
                 }
 
                 if(params.sort == 'created') {
@@ -82,7 +97,7 @@ class ExportDataController {
                 }
 
                 if(params.sort == 'location') {
-                    featureLocations {
+                    featureLocation {
                         sequence {
                             order('name', params.order)
                         }
@@ -112,15 +127,15 @@ class ExportDataController {
                     order('description', params.order)
                 }
 
-                if(params.sort == 'organismId') {
-                    featureLocations {
-                        sequence {
-                            organismId {
-                                order('commonName', params.order)
-                            }
-                        }
-                    }
-                }
+                // if(params.sort == 'organismId') {
+                //     featureLocations {
+                //         sequence {
+                //             organismId {
+                //                 order('commonName', params.order)
+                //             }
+                //         }
+                //     }
+                // }
 
                 if(params.sort == 'lsaa_length') {
                     featureLocations {
@@ -132,6 +147,17 @@ class ExportDataController {
                     order('endPosition' - 'startPosition', params.order)
                 }
 
+                // if(params.sort == 'organismId'){
+                //      featureLocations {
+                //         sequence {
+                //             order('organism', params.order)
+                //         }
+                //     }
+                //     // breed {
+                //     //     order('organism', params.order)
+                //     // }
+                // }
+
             }
 
             selectedAlternativeLociList = list
@@ -139,7 +165,6 @@ class ExportDataController {
             // log.debug "list: ${list.toString()}"
             // log.debug "selectedList: ${selectedAlternativeLociList.toString()}"
 
-            selectedOrganism = Organism.findById(params.organismId)
 
             // selectedBreed = Breed.findByName(params.breed)
 
@@ -196,20 +221,26 @@ class ExportDataController {
 
             def list = criteria.list() {
 
-                
+                // featureLocations {
+                //     sequence {
+                //         organism {
+                //             eq('id', params.organism)
+                //         }
+                //     }
+                // }
+
                 featureLocations {
                     sequence {
                         organism {
-                            eq('id', params.organism)
+                            eq('id', params.organismId.toLong())
                         }
                     }
                 }
-
                 // eq('type', params.type)
 
                 // eq('breed', params.breed)
                 and {
-                    
+
                     if(params.individual != null){
                         'in'('individual', params.individual)
                     }
@@ -273,15 +304,15 @@ class ExportDataController {
                 if(params.sort == 'description') {
                     order('description', 'ASC')
                 }
-                if(params.sort == 'organismId') {
-                    featureLocations {
-                        sequence {
-                            organism {
-                                order('commonName', 'ASC')
-                            }
-                        }
-                    }
-                }
+                // if(params.sort == 'organismId') {
+                //     featureLocations {
+                //         sequence {
+                //             organism {
+                //                 order('commonName', 'ASC')
+                //             }
+                //         }
+                //     }
+                // }
             }
 
 
