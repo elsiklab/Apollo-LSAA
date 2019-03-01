@@ -95,13 +95,13 @@ function(
                 //     }
                 // }));
                 
-                browser.addGlobalMenuItem('lsaa', new MenuItem({
-                    label: 'View report',
-                    iconClass: 'dijitIconTable',
-                    onClick: function() {
-                        window.open(thisB.contextPath + '/../alternativeLoci' + '?organismId=' + browser.config.dataset_id);
-                    }
-                }));
+                // browser.addGlobalMenuItem('lsaa', new MenuItem({
+                //     label: 'View report',
+                //     iconClass: 'dijitIconTable',
+                //     onClick: function() {
+                //         window.open(thisB.contextPath + '/../alternativeLoci' + '?organismId=' + browser.config.dataset_id);
+                //     }
+                // }));
                 browser.addGlobalMenuItem('lsaa', new MenuItem({
                     label: 'Export LSAA',
                     iconClass: 'dijitIconSave',

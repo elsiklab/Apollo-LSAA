@@ -206,7 +206,7 @@ class AlternativeLociController {
                     instance.featureLocation.fmin = Integer.parseInt(requestObject.start) - 1
                     instance.featureLocation.fmax = Integer.parseInt(requestObject.end)
                     instance.featureLocation.sequence = sequence
-                    instance.orientation = requestObject.orientation
+                    // instance.orientation = requestObject.orientation
                     instance.save(flush: true, failOnError: true)
 
                     render view: 'edit', model: [alternativeLociInstance: instance]
@@ -326,6 +326,7 @@ class AlternativeLociController {
     }
 
     def createInsertion() {
+        log.debug "CREATE INSERTION"
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
         Organism organism = Organism.findById(params.organism)

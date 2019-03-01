@@ -116,7 +116,8 @@ define([
                                             description: thisB.description.get('value'),
                                             breed: breed.join('|'),
                                             individual: individual,
-                                            orientation: thisB.orientation.get('value'),
+                                            // orientation: thisB.orientation.get('value'),
+                                            orientation: 'Forward',
                                             sequenceData: thisB.sequencedata.value,
                                             organism: thisB.browser.config.dataset_id,
                                             username: thisB.user.email
@@ -155,7 +156,8 @@ define([
                                         sequence: thisB.sequence.get('value'),
                                         description: thisB.description.get('value'),
                                         individual: individual,
-                                        orientation: thisB.orientation.get('value'),
+                                        // orientation: thisB.orientation.get('value'),
+                                        orientation: 'Forward',
                                         sequenceData: thisB.sequencedata.value,
                                         organism: thisB.browser.config.dataset_id,
                                         username: thisB.user.email
@@ -196,14 +198,14 @@ define([
                 dojo.addClass(this.domNode, 'setLSAA');
                 this.sequence = new TextBox({id: 'lsaa_name', value: this.browser.refSeq.name});
                 this.lsaaPosition = new TextBox({id: 'lsaa_position'});
-                this.orientation = new Select({
-                    name: "orientation-select",
-                    width: "75px",
-                    options: [
-                        { label: "Forward", value:  1 },
-                        { label: "Reverse", value: -1 }
-                    ]
-                });
+                // this.orientation = new Select({
+                //     name: "orientation-select",
+                //     width: "75px",
+                //     options: [
+                //         { label: "Forward", value:  1 },
+                //         { label: "Reverse", value: -1 }
+                //     ]
+                // });
                 this.description = new TextBox({id: 'lsaa_description'});
                 this.breed = new TextBox({id: 'lsaa_breed'});
                 this.individual = new TextBox({id: 'lsaa_individual'});
@@ -216,7 +218,7 @@ define([
                 this.set('content', [
                     dom.create('label', { 'for': 'lsaa_name', innerHTML: 'Reference sequence: ' }), this.sequence.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_position', innerHTML: 'Position: ' }), this.lsaaPosition.domNode, br(),
-                    dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
+                    // dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_description', innerHTML: 'Description: ' }), this.description.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_breed', innerHTML: 'Breed: ' }), this.breed.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_individual', innerHTML: 'Individual: ' }), this.individual.domNode, br(),

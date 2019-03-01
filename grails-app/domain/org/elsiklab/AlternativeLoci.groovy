@@ -37,5 +37,6 @@ class AlternativeLoci extends BiologicalRegion {
 
     static mapping = {
         description type: 'text'
+        orientation nullable: true
     }
 }
