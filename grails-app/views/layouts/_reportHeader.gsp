@@ -9,6 +9,7 @@
     </style>
     <div class="apollo-header row">
         <g:link uri="/"><asset:image src="ApolloLogo_100x36.png"/></g:link>
+        <!--
         <div class="btn btn-group">
             <button class="btn dropdown-toggle glyphicon glyphicon-list-alt " data-toggle="dropdown">
                 Reports
@@ -22,6 +23,7 @@
                 </g:each>
             </ul>
         </div>
+        -->
         <div class="menubox">
             <p>Scaffold editor menu</p>
             <ul>
