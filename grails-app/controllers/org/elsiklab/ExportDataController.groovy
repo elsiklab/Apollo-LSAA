@@ -7,6 +7,10 @@ import org.bbop.apollo.FeatureLocation
 import org.bbop.apollo.Sequence
 import org.bbop.apollo.Organism
 import org.ho.yaml.Yaml
+import java.io.BufferedReader
+import java.util.zip.GZIPOutputStream
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class ExportDataController {
 
@@ -368,7 +372,7 @@ class ExportDataController {
 
             // log.debug "organism: ${organism.toString()} breed: ${breed.toString()} list: ${selectedAlternativeLociList.toString()} params: ${params.toString()}"
             response.contentType = 'text/plain'
-            if(params.download == 'download') {
+            if(params.action == 'download') {
                 response.setHeader ('Content-disposition', 'attachment;filename=output.json')
             }
             def responseJson = transformedJsonObject as JSON
@@ -386,7 +390,7 @@ class ExportDataController {
         //     }
 
         //     response.contentType = 'text/plain'
-        //     if(params.download == 'download') {
+        //     if(params.action == 'download') {
         //         response.setHeader ('Content-disposition', 'attachment;filename=output.json')
         //     }
         //     def responseJson = transformedJsonObject as JSON
@@ -431,20 +435,27 @@ class ExportDataController {
                 transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
             }
 
-            log.debug transformedFastaMap.dump()
+            //log.debug transformedFastaMap.dump()
             
-            response.contentType = 'text/plain'
+            // response.contentType = 'text/plain'
+            response.setContentType("application/octet-stream")
 
-            if (params.download == 'download') {
-                response.setHeader("Content-disposition", "attachment;filename=output.fasta")
-            }
+            response.setHeader("Content-disposition", "attachment;filename=output.fa")
+            // if (params.action == 'download') {
+            // }
 
             log.debug "ORDID: ${selectedOrganism.id}, BREEDID: ${list.breed.name}"
             File file = new File(transformedFastaMap.getAt(selectedOrganism.id))
             // File file = new File(transformedFastaMap.get(selectedOrganism.id))
 
+            // FileInputStream file = new FileInputStream(transformedFastaMap.getAt(selectedOrganism.id))
+
             if (file) {
-                response.outputStream << file.bytes
+                new GZIPOutputStream(response.outputStream).withWriter { it << file.text }
+                // GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(file));
+                // BufferedReader br = new BufferedReader(new OutputStreamReader(gzip));
+                // response.outputStream << br.bytes
+                // response.outputStream << file.bytes
             } else {
                 render ([error: "Cannot find file"] as JSON)
             }
@@ -463,7 +474,7 @@ class ExportDataController {
 
         //     response.contentType = 'text/plain'
         //     //response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
-        //     if (params.download == 'download') {
+        //     if (params.action == 'download') {
         //         response.setHeader("Content-disposition", "attachment;filename=output.fasta")
         //     }
 

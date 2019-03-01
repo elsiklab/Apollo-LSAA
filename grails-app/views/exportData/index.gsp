@@ -5,7 +5,7 @@
 <html>
     <head>
         <meta name="layout" content="main">
-        <title>LSAA - Export scaffolds</title>
+        <title>LSAA - Export</title>
         <style>
             .wide-container {
                 margin-left: 20px;
@@ -119,7 +119,7 @@
                             <label>Action</label>
                             <g:select id="action" name="action" from="['View', 'Download']" />
 
-                            <g:actionSubmit id="export-data" value="Export Scaffolds" action="exportSequences" disabled="disabled"/>
+                            <g:actionSubmit id="export-data" value="Export" action="exportSequences" disabled="disabled"/>
 
                             <g:hiddenField value="${params.organismId}" name="organismId" />
 
@@ -159,6 +159,7 @@
                                 <g:sortableColumn property="individual" title="Individual" params="${params}"/>
                                 <g:sortableColumn property="description" title="Description" params="${params}"/>
                                 <g:sortableColumn property="link" title="Link" params="${params}"/>
+                                <g:sortableColumn property="id" title="Delete"/>
                             </tr>
                         </thead>
                         <tbody>
@@ -198,6 +199,7 @@
                                             <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.id +'/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + (feature.featureLocation.fmin + 1) + '..' + feature.featureLocation.fmax)}&tracks=LSAA_annotations">JBrowse Link</a>
                                         </g:if>
                                     </td>
+                                    <td><g:link action="delete" id="${feature.id}">Delete</g:link></td>
                                 </tr>
                             </g:each>
                         </tbody>
