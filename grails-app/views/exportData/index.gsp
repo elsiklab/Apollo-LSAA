@@ -199,7 +199,7 @@
                                             <a href="${g.createLink(absolute:true, uri: '/' + feature.featureLocation.sequence.organism.id +'/jbrowse/?loc=' + feature.featureLocation?.sequence?.name + ':' + (feature.featureLocation.fmin + 1) + '..' + feature.featureLocation.fmax)}&tracks=LSAA_annotations">JBrowse Link</a>
                                         </g:if>
                                     </td>
-                                    <td><g:link action="delete" id="${feature.id}">Delete</g:link></td>
+				    <td><g:link action="delete" controller="alternativeLoci" id="${feature.id}" params="[organsimId: params.organismId]">Delete</g:link></td>
                                 </tr>
                             </g:each>
                         </tbody>

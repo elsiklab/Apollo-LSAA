@@ -207,6 +207,7 @@ class AlternativeLociController {
                     instance.featureLocation.fmax = Integer.parseInt(requestObject.end)
                     instance.featureLocation.sequence = sequence
                     // instance.orientation = requestObject.orientation
+		    //instance.orientation = 0
                     instance.save(flush: true, failOnError: true)
 
                     render view: 'edit', model: [alternativeLociInstance: instance]
@@ -242,7 +243,8 @@ class AlternativeLociController {
         }
         alternativeLociInstance.delete(flush:true)
 
-        redirect(action: 'index')
+        //redirect(action: 'index')
+	redirect(uri: '/exportData?organismId=' + params['organsimId'])
     }
 
     protected void notFound() {

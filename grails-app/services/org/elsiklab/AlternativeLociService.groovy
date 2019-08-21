@@ -76,7 +76,7 @@ class AlternativeLociService {
                 individual: jsonObject.has("individual") ? jsonObject.get("individual") : null,
                 startPosition: 0,
                 endPosition: jsonObject.sequenceData.length() - 1,
-                orientation: orientation,
+                orientation: 0,
                 fastaFile: fastaFile
         ).save(flush: true)
 
@@ -158,7 +158,7 @@ class AlternativeLociService {
         String name = UUID.randomUUID()
         String description = jsonObject.description
         String sequenceName = jsonObject.sequence
-        // int orientation = Integer.parseInt(jsonObject.orientation)
+        //int orientation = Integer.parseInt(jsonObject.orientation)
         int start = Integer.parseInt(jsonObject.position)
         String coordinateFormat = jsonObject.coordinateFormat
         if (coordinateFormat == "one_based") {
@@ -186,7 +186,7 @@ class AlternativeLociService {
                 individual: jsonObject.has("individual") ? jsonObject.get("individual") : null,
                 startPosition: 0,
                 endPosition: jsonObject.sequenceData.length() - 1,
-                // orientation: orientation,
+                orientation: 0,
                 fastaFile: fastaFile
         ).save(flush: true)
 
