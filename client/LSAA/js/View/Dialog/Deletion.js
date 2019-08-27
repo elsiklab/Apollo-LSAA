@@ -46,8 +46,8 @@ define([
                         var valid = true;
                         var breed = thisB.breed.get('value');
                         var individual = thisB.individual.get('value');
-                        var urlTemplate1 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
-                        var urlTemplate2 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
+                        var urlTemplate1 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
+                        var urlTemplate2 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
                         var queryUrl;
 
                         if (breed.length != 0) {
