@@ -6,6 +6,7 @@ A plugin for [Apollo](http://github.com/GMOD/Apollo) to annotate alternative loc
 
 # Prerequisites
 
+* Apollo 2.1.0 (tested and working)
 * Grails 2.5.5
 * Java 8 (minimum for htsjdk)
 * Samtools (to perform faidx)
