@@ -51,8 +51,8 @@ define([
                         var valid = true;
                         var breed = thisB.breed.get('value');
                         var individual = thisB.individual.get('value');
-                        var urlTemplate1 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
-                        var urlTemplate2 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
+                        var urlTemplate1 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
+                        var urlTemplate2 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
                         var queryUrl;
 
                         if (breed.length != 0) {
@@ -116,8 +116,7 @@ define([
                                             description: thisB.description.get('value'),
                                             breed: breed.join('|'),
                                             individual: individual,
-                                            // orientation: thisB.orientation.get('value'),
-                                            orientation: 'Forward',
+                                            //orientation: thisB.orientation.get('value'),
                                             sequenceData: thisB.sequencedata.value,
                                             organism: thisB.browser.config.dataset_id,
                                             username: thisB.user.email
@@ -156,8 +155,7 @@ define([
                                         sequence: thisB.sequence.get('value'),
                                         description: thisB.description.get('value'),
                                         individual: individual,
-                                        // orientation: thisB.orientation.get('value'),
-                                        orientation: 'Forward',
+                                        //orientation: thisB.orientation.get('value'),
                                         sequenceData: thisB.sequencedata.value,
                                         organism: thisB.browser.config.dataset_id,
                                         username: thisB.user.email
@@ -194,18 +192,21 @@ define([
             },
 
             show: function() {
-                console.log(this);
+                //console.log(this);
+                try {
                 dojo.addClass(this.domNode, 'setLSAA');
                 this.sequence = new TextBox({id: 'lsaa_name', value: this.browser.refSeq.name});
                 this.lsaaPosition = new TextBox({id: 'lsaa_position'});
-                // this.orientation = new Select({
-                //     name: "orientation-select",
-                //     width: "75px",
-                //     options: [
-                //         { label: "Forward", value:  1 },
-                //         { label: "Reverse", value: -1 }
-                //     ]
-                // });
+		/*
+                this.orientation = new Select({
+                    name: "orientation-select",
+                    width: "75px",
+                    options: [
+                        { label: "Forward", value:  1 },
+                        { label: "Reverse", value: -1 }
+                    ]
+                });
+		*/
                 this.description = new TextBox({id: 'lsaa_description'});
                 this.breed = new TextBox({id: 'lsaa_breed'});
                 this.individual = new TextBox({id: 'lsaa_individual'});
@@ -218,7 +219,7 @@ define([
                 this.set('content', [
                     dom.create('label', { 'for': 'lsaa_name', innerHTML: 'Reference sequence: ' }), this.sequence.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_position', innerHTML: 'Position: ' }), this.lsaaPosition.domNode, br(),
-                    // dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
+                    //dom.create('label', { 'for': 'lsaa_orientation', innerHTML: 'Orientation: ' }), this.orientation.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_description', innerHTML: 'Description: ' }), this.description.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_breed', innerHTML: 'Breed: ' }), this.breed.domNode, br(),
                     dom.create('label', { 'for': 'lsaa_individual', innerHTML: 'Individual: ' }), this.individual.domNode, br(),
@@ -227,6 +228,9 @@ define([
                 ]);
 
                 this.inherited(arguments);
+                } catch(e) {
+                        alert('You must be logged in to submit LSAA and access the Export Table\n\nPlease see instructions at bovinegenome.elsiklab.missouri.edu/annotator_login');
+                }
             },
 
             hide: function() {

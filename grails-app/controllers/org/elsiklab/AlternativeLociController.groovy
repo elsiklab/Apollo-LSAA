@@ -100,7 +100,8 @@ class AlternativeLociController {
             render view: 'index', model: [features: list, sort: params.sort, alternativeLociInstanceCount: list.totalCount]
         }
         else {
-            render status: 401, text: 'Failed user authentication'
+            //render status: 401, text: 'Failed user authentication'
+	    render status: 401, text: '<p style="text-align: center">You must be logged in to submit LSAA and access the Export Table</p><p style="text-align: center">Please see instructions <a href="https://bovinegenome.elsiklab.missouri.edu/annotator_login">here</a></p>'
         }
     }
 
@@ -206,8 +207,7 @@ class AlternativeLociController {
                     instance.featureLocation.fmin = Integer.parseInt(requestObject.start) - 1
                     instance.featureLocation.fmax = Integer.parseInt(requestObject.end)
                     instance.featureLocation.sequence = sequence
-                    // instance.orientation = requestObject.orientation
-		    //instance.orientation = 0
+                    //instance.orientation = requestObject.orientation
                     instance.save(flush: true, failOnError: true)
 
                     render view: 'edit', model: [alternativeLociInstance: instance]
@@ -241,10 +241,11 @@ class AlternativeLociController {
                 fastaFile.delete()
             }
         }
-        alternativeLociInstance.delete(flush:true)
+        
+	alternativeLociInstance.delete(flush:true)
 
-        //redirect(action: 'index')
-	redirect(uri: '/exportData?organismId=' + params['organsimId'])
+        //redirect(controller: 'exportData', params: params)
+        redirect(uri: '/exportData?organismId=' + params['organsimId'])
     }
 
     protected void notFound() {
@@ -328,7 +329,7 @@ class AlternativeLociController {
     }
 
     def createInsertion() {
-        log.debug "CREATE INSERTION"
+	log.debug "CREATE INSERTION"
         JSONObject requestObject = permissionService.handleInput(request, params)
         log.debug "${requestObject.toString()}"
         Organism organism = Organism.findById(params.organism)

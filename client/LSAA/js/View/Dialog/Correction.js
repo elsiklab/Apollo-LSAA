@@ -48,8 +48,8 @@ define([
                         var valid = true;
                         var breed = thisB.breed.get('value');
                         var individual = thisB.individual.get('value');
-                        var urlTemplate1 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
-                        var urlTemplate2 = 'http://128.206.116.13:8080/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
+                        var urlTemplate1 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.identifier" op="=" value="%IDENTIFIER%"/></query>&format=json';
+                        var urlTemplate2 = 'http://bovinegenome.org/bovinemine/service/query/results?query=<query name="" model="genomic" view="LBOTerm.identifier LBOTerm.name" longDescription="" sortOrder="LBOTerm.identifier asc"><constraint path="LBOTerm.name" op="=" value="%NAME%"/></query>&format=json';
                         var queryUrl;
 
                         if (breed.length != 0) {
@@ -209,6 +209,7 @@ define([
             },
 
             show: function() {
+		try {
                 dojo.addClass(this.domNode, 'setLSAA');
 
                 this.sequence = new TextBox({id: 'lsaa_name', value: this.browser.refSeq.name});
@@ -245,6 +246,9 @@ define([
                 ]);
 
                 this.inherited(arguments);
+		} catch(e) {
+			alert('You must be logged in to submit LSAA and access the Export Table\n\nPlease see instructions at bovinegenome.elsiklab.missouri.edu/annotator_login');
+		}
             },
 
             hide: function() {

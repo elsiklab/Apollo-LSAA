@@ -11,6 +11,8 @@ import java.io.BufferedReader
 import java.util.zip.GZIPOutputStream
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 
 class ExportDataController {
 
@@ -202,7 +204,9 @@ class ExportDataController {
             render view: 'index', model: [ features: selectedAlternativeLociList ]
         }
         else {
-            render status: 401, text: 'Failed user authentication'
+            //render status: 401, text: 'Failed user authentication'
+	    render status: 401, text: '<p style="text-align: center">You must be logged in to submit LSAA and access the Export Table</p><p style="text-align: center">Please see instructions <a href="https://bovinegenome.elsiklab.missouri.edu/annotator_login">here</a></p>'
+
         }
         exportEntireGenome = false
         // selectedOrganismId = null
@@ -372,7 +376,7 @@ class ExportDataController {
 
             // log.debug "organism: ${organism.toString()} breed: ${breed.toString()} list: ${selectedAlternativeLociList.toString()} params: ${params.toString()}"
             response.contentType = 'text/plain'
-            if(params.action == 'download') {
+            if(params.download == 'download') {
                 response.setHeader ('Content-disposition', 'attachment;filename=output.json')
             }
             def responseJson = transformedJsonObject as JSON
@@ -390,7 +394,7 @@ class ExportDataController {
         //     }
 
         //     response.contentType = 'text/plain'
-        //     if(params.action == 'download') {
+        //     if(params.download == 'download') {
         //         response.setHeader ('Content-disposition', 'attachment;filename=output.json')
         //     }
         //     def responseJson = transformedJsonObject as JSON
@@ -435,27 +439,29 @@ class ExportDataController {
                 transformedFastaMap = exportDataService.getTransformationAsFasta(selectedOrganism, selectedBreed, list, false)
             }
 
-            //log.debug transformedFastaMap.dump()
+            log.debug transformedFastaMap.dump()
             
-            // response.contentType = 'text/plain'
-            response.setContentType("application/octet-stream")
-
-            response.setHeader("Content-disposition", "attachment;filename=output.fa")
-            // if (params.action == 'download') {
-            // }
+            //response.contentType = 'text/plain'
+	    response.setContentType("application/octet-stream")
+	    response.setHeader("Content-disposition", "attachment;filename=output.fa.gz")
+            if (params.download == 'download') {
+                response.setHeader("Content-disposition", "attachment;filename=output3.fa.gz")
+            }
 
             log.debug "ORDID: ${selectedOrganism.id}, BREEDID: ${list.breed.name}"
             File file = new File(transformedFastaMap.getAt(selectedOrganism.id))
+           // FileInputStream file = new FileInputStream(transformedFastaMap.getAt(selectedOrganism.id))
             // File file = new File(transformedFastaMap.get(selectedOrganism.id))
-
-            // FileInputStream file = new FileInputStream(transformedFastaMap.getAt(selectedOrganism.id))
-
             if (file) {
-                new GZIPOutputStream(response.outputStream).withWriter { it << file.text }
-                // GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(file));
-                // BufferedReader br = new BufferedReader(new OutputStreamReader(gzip));
-                // response.outputStream << br.bytes
-                // response.outputStream << file.bytes
+		new GZIPOutputStream(response.outputStream).withWriter { it << file.text }
+		log.debug "\n\n SENDING FILE GZIP  \n\n"
+                //GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(file))
+                //response.outputStream = new GZIPOutputStream(new FileOutputStream(file))
+		//response.outputStream << gzip.bytes
+		//response.outputStream = gzip
+               	//BufferedReader br = new BufferedReader(gzip)
+                //response.outputStream << br.bytes
+                //response.outputStream << file.bytes
             } else {
                 render ([error: "Cannot find file"] as JSON)
             }
@@ -474,7 +480,7 @@ class ExportDataController {
 
         //     response.contentType = 'text/plain'
         //     //response.setHeader("Content-disposition", "attachment;filename=${transformedFastaMap[selectedOrganism.id]}")
-        //     if (params.action == 'download') {
+        //     if (params.download == 'download') {
         //         response.setHeader("Content-disposition", "attachment;filename=output.fasta")
         //     }
 
